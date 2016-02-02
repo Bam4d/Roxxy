@@ -26,3 +26,26 @@
 *.exe
 *.out
 *.app
+
+# Ignore Debug
+Debug/
+Release/
+
+# Ignore CEF resources
+*.pak
+.ninja*
+*.dat
+*.bin
+
+# Ignore eclipse stuff
+.cproject
+.project
+.settings/
+
+# Ignore pycharm stuff
+.idea/
+
+
+*.log
+cefsimple
+chrome-sandbox
