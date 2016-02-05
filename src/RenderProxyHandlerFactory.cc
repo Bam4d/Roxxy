@@ -17,12 +17,12 @@ RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port) {
 
 	// Do something smart here like pool browsers.
 	//Don't want to start and stop browser instances all the time, this is probably inefficient
-	browserHandler_ = std::shared_ptr<CefBrowserHandler>(new CefBrowserHandler());
+	//browserHandler_ = new CefBrowserHandler();
 }
 
 
 RenderProxyHandlerFactory::~RenderProxyHandlerFactory() {
-
+	delete browserHandler_;
 }
 
 void RenderProxyHandlerFactory::onServerStart(folly::EventBase* evb) noexcept {
@@ -36,7 +36,7 @@ void RenderProxyHandlerFactory::onServerStop() noexcept {
 RequestHandler* RenderProxyHandlerFactory::onRequest(RequestHandler* handler, HTTPMessage* message) noexcept {
 	LOG(INFO) << "request received, need to do something with this request now";
 
-	return new RenderProxyHandler(browserHandler_);
+	return new RenderProxyHandler(new CefBrowserHandler());
 }
 
 

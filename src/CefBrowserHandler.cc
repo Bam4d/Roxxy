@@ -20,15 +20,17 @@
 
 CefBrowserHandler::CefBrowserHandler() {
 	// TODO Auto-generated constructor stub
-
+	LOG(INFO) << "starting browser handler";
 }
 
 CefBrowserHandler::~CefBrowserHandler() {
 	// TODO Auto-generated destructor stub
+	LOG(INFO) << "killing browser handler";
 }
 
-void CefBrowserHandler::StartBrowser(RenderProxyHandler* renderProxyHandler) {
+void CefBrowserHandler::StartBrowserSession(RenderProxyHandler* renderProxyHandler) {
 
+	LOG(INFO) << "blah blah";
 	// the render proxy will destroy itself when data is sent,
 	// so we don't need to do anything "smart" with pointers here
 	renderProxyHandler_ = renderProxyHandler;
@@ -36,7 +38,7 @@ void CefBrowserHandler::StartBrowser(RenderProxyHandler* renderProxyHandler) {
 	if (!CefCurrentlyOn(TID_UI)) {
 		// Execute on the UI thread.
 		CefPostTask(TID_UI,
-				base::Bind(&CefBrowserHandler::StartBrowser, this, renderProxyHandler));
+				base::Bind(&CefBrowserHandler::StartBrowserSession, this, renderProxyHandler));
 		return;
 	}
 
@@ -85,7 +87,7 @@ bool CefBrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 	LOG(WARNING) << "Closing browser";
 
 	// Set a flag to indicate that the window close should be allowed.
-	is_closing_ = true;
+	//is_closing_ = true;
 
 	return false;
 }
@@ -115,19 +117,20 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 	frame->LoadString(ss.str(), failedUrl);
 }
 
-void CefBrowserHandler::CloseBrowser(bool force_close) {
+void CefBrowserHandler::EndBrowserSession() {
 	if(browser_ == nullptr) return;
 
 	if (!CefCurrentlyOn(TID_UI)) {
 		// Execute on the UI thread.
 		CefPostTask(TID_UI,
-				base::Bind(&CefBrowserHandler::CloseBrowser, this,
-						force_close));
+				base::Bind(&CefBrowserHandler::EndBrowserSession, this));
 		return;
 	}
 
 	LOG(INFO)<< "Closing browser.";
-	browser_->GetHost()->CloseBrowser(force_close);
+	browser_->StopLoad();
+	browser_->GetHost()->CloseBrowser(false);
+	browser_ = NULL;
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {

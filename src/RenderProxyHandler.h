@@ -15,7 +15,7 @@
 
 class RenderProxyHandler: public proxygen::RequestHandler {
 public:
-	RenderProxyHandler(std::shared_ptr<CefBrowserHandler> browserHandler);
+	RenderProxyHandler(CefBrowserHandler* browserHandler);
 	virtual ~RenderProxyHandler();
 
 	void SendResponse(std::string response_data);
@@ -25,7 +25,7 @@ public:
 
 private:
 
-	std::shared_ptr<CefBrowserHandler> browserHandler_;
+	CefBrowserHandler* browserHandler_;
 
 	// Want to store a reference to the event base for folly
 	folly::EventBase* evb;

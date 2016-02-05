@@ -26,10 +26,10 @@ using folly::toJson;
 
 using namespace proxygen;
 
-RenderProxyHandler::RenderProxyHandler(std::shared_ptr<CefBrowserHandler> browserHandler) {
+RenderProxyHandler::RenderProxyHandler(CefBrowserHandler* browserHandler) {
 	LOG(INFO) << "ProxyHandler created.";
 
-	browserHandler_ = std::move(browserHandler);
+	browserHandler_ = browserHandler;
 
 }
 
@@ -69,8 +69,11 @@ void RenderProxyHandler::onEOM() noexcept {
 		LOG(INFO) << "URL is :" << toPrettyJson(url);
 		this->url = url.asString().toStdString();
 
+		LOG(INFO) << "browsahhh" << toPrettyJson(url);
+
 		// Start the browser on "about:blank"
-		browserHandler_->StartBrowser(this);
+		browserHandler_->StartBrowserSession(this);
+		LOG(INFO) << "browsahhh" << toPrettyJson(url);
 
 	} catch(...) {
 		ResponseBuilder(downstream_).status(400, "BAD_REQUEST")
@@ -86,13 +89,13 @@ void RenderProxyHandler::onUpgrade(UpgradeProtocol protocol) noexcept {
 
 void RenderProxyHandler::requestComplete() noexcept {
 	LOG(INFO)<< "Request complete.";
-	browserHandler_->CloseBrowser(false);
+	browserHandler_->EndBrowserSession();
 	delete this;
 }
 
 void RenderProxyHandler::onError(ProxygenError err) noexcept {
 	LOG(WARNING) << "Request error";
-	browserHandler_->CloseBrowser(false);
+	browserHandler_->EndBrowserSession();
 	delete this;
 }
 

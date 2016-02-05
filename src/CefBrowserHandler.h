@@ -22,79 +22,82 @@ public:
 	virtual ~CefBrowserHandler();
 
 	// CefRenderHandler methods:
-		virtual CefRefPtr<CefRenderHandler> GetRenderHandler() {
-			return this;
-		}
+	virtual CefRefPtr<CefRenderHandler> GetRenderHandler() {
+		return this;
+	}
 
-		virtual bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-			rect = CefRect(0, 0, 0, 0);
-			return true;
-		}
+	virtual bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+		rect = CefRect(0, 0, 0, 0);
+		return true;
+	}
 
-		virtual void OnPaint(CefRefPtr<CefBrowser>,
-				CefRenderHandler::PaintElementType, const RectList&, const void*,
-				int, int) {
+	virtual void OnPaint(CefRefPtr<CefBrowser>,
+			CefRenderHandler::PaintElementType, const RectList&, const void*,
+			int, int) {
 
-		}
+	}
 
-		// CefClient methods:
-		virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() override {
-			return this;
-		}
-		virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override {
-			return this;
-		}
-		virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override {
-			return this;
-		}
+	// CefClient methods:
+	virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() override {
+		return this;
+	}
+	virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override {
+		return this;
+	}
+	virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override {
+		return this;
+	}
 
-		// Request that all existing browser windows close.
-		void CloseBrowser(bool force_close);
+	// End the session with the browser.
+	void EndBrowserSession();
 
-		virtual void StartBrowser(RenderProxyHandler* renderProxyHandler);
+	virtual void StartBrowserSession(RenderProxyHandler* renderProxyHandler);
 
-		bool IsClosing() const {
-			return is_closing_;
-		}
+	bool IsClosing() const {
+		return is_closing_;
+	}
 
 private:
 
-		// The proxy handler that has started the browser
-		RenderProxyHandler* renderProxyHandler_;
+	// The proxy handler that has started the browser
+	RenderProxyHandler* renderProxyHandler_;
 
-		// The current browser being handled
-		CefRefPtr<CefBrowser> browser_ = NULL;
+	// The current browser being handled
+	//typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
+	//BrowserList browsers_;
 
-		bool is_closing_ = false;
+	CefRefPtr<CefBrowser> browser_ = nullptr;
 
-		virtual void setBrowserUrl(const CefString& url);
+	bool is_closing_ = false;
 
-		// CefDisplayHandler methods:
-		virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
+	virtual void setBrowserUrl(const CefString& url);
 
-		// CefLifeSpanHandler methods:
-		virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
-		virtual bool DoClose(CefRefPtr<CefBrowser> browser) override;
-		virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
+	// CefDisplayHandler methods:
+	virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
 
-		// CefLoadHandler methods:
-		virtual void OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
-				bool isLoading,
-				bool canGoBack,
-				bool canGoForward) override;
+	// CefLifeSpanHandler methods:
+	virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
+	virtual bool DoClose(CefRefPtr<CefBrowser> browser) override;
+	virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 
-		virtual void OnLoadError(CefRefPtr<CefBrowser> browser,
-				CefRefPtr<CefFrame> frame, ErrorCode errorCode,
-				const CefString& errorText, const CefString& failedUrl) override;
+	// CefLoadHandler methods:
+	virtual void OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
+			bool isLoading,
+			bool canGoBack,
+			bool canGoForward) override;
 
-		virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
-				CefRefPtr<CefFrame> frame) override;
+	virtual void OnLoadError(CefRefPtr<CefBrowser> browser,
+			CefRefPtr<CefFrame> frame, ErrorCode errorCode,
+			const CefString& errorText, const CefString& failedUrl) override;
 
-		virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
-				CefRefPtr<CefFrame> frame, int httpStatusCode) override;
+	virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
+			CefRefPtr<CefFrame> frame) override;
+
+	virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+			CefRefPtr<CefFrame> frame, int httpStatusCode) override;
 
 
-		IMPLEMENT_REFCOUNTING(CefBrowserHandler)
+	IMPLEMENT_REFCOUNTING(CefBrowserHandler)
 
 };
 

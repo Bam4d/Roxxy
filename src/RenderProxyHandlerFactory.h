@@ -33,7 +33,7 @@ class RenderProxyHandlerFactory : public RequestHandlerFactory {
 		// Port number that the server will listen on
 		int port_ = 80;
 
-		std::shared_ptr<CefBrowserHandler> browserHandler_;
+		CefBrowserHandler* browserHandler_;
 };
 
 #endif /* RENDERPROXYHANDLERFACTORY_H_ */
