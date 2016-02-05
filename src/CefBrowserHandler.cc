@@ -30,7 +30,6 @@ CefBrowserHandler::~CefBrowserHandler() {
 
 void CefBrowserHandler::StartBrowserSession(RenderProxyHandler* renderProxyHandler) {
 
-	LOG(INFO) << "blah blah";
 	// the render proxy will destroy itself when data is sent,
 	// so we don't need to do anything "smart" with pointers here
 	renderProxyHandler_ = renderProxyHandler;
@@ -86,9 +85,6 @@ bool CefBrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 
 	LOG(WARNING) << "Closing browser";
 
-	// Set a flag to indicate that the window close should be allowed.
-	//is_closing_ = true;
-
 	return false;
 }
 
@@ -100,7 +96,7 @@ void CefBrowserHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 
 void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) {
 	CEF_REQUIRE_UI_THREAD();
-
+	DCHECK(renderProxyHandler_ != nullptr);
 	LOG(WARNING) << "LOAD ERROR";
 
 	// Don't display an error for downloaded files.
@@ -114,7 +110,8 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 			<< " with error " << std::string(errorText) << " (" << errorCode
 			<< ").</h2></body></html>";
 
-	frame->LoadString(ss.str(), failedUrl);
+
+	renderProxyHandler_->SendResponse(ss.str());
 }
 
 void CefBrowserHandler::EndBrowserSession() {
@@ -130,20 +127,19 @@ void CefBrowserHandler::EndBrowserSession() {
 	LOG(INFO)<< "Closing browser.";
 	browser_->StopLoad();
 	browser_->GetHost()->CloseBrowser(false);
-	browser_ = NULL;
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
-	LOG(INFO) << "Loading state change";
-	LOG(INFO) << "isLoading " << isLoading;
-	LOG(INFO) << "canGoBack " << canGoBack;
-	LOG(INFO) << "canGoForward " << canGoForward;
-
+	//LOG(INFO) << "Loading state change";
+	//LOG(INFO) << "isLoading " << isLoading;
+	//LOG(INFO) << "canGoBack " << canGoBack;
+	//LOG(INFO) << "canGoForward " << canGoForward;
+	DCHECK(renderProxyHandler_ != nullptr);
 	if(!isLoading) {
 
 		// We load to about blank to zero the state of the browser
 		// TODO: is this necessary?
-		LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
+		//LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
 
 		if(isAboutBlank) {
@@ -160,14 +156,14 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 }
 
 void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) {
-	LOG(INFO)<< "Title has changed";
+	//LOG(INFO)<< "Title has changed";
 }
 
 void CefBrowserHandler::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
 	//frame->GetSource(new )
-	LOG(INFO)<< "OnLoadStart test";
+	//LOG(INFO)<< "OnLoadStart test";
 }
 
 void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
-	LOG(INFO)<< "OnLoadEnd test";
+	//LOG(INFO)<< "OnLoadEnd test";
 }

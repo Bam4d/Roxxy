@@ -22,7 +22,8 @@ RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port) {
 
 
 RenderProxyHandlerFactory::~RenderProxyHandlerFactory() {
-	delete browserHandler_;
+	LOG(INFO) << "destroying RenderProxyHandlerFactory";
+	//delete browserHandler_;
 }
 
 void RenderProxyHandlerFactory::onServerStart(folly::EventBase* evb) noexcept {
@@ -36,7 +37,8 @@ void RenderProxyHandlerFactory::onServerStop() noexcept {
 RequestHandler* RenderProxyHandlerFactory::onRequest(RequestHandler* handler, HTTPMessage* message) noexcept {
 	LOG(INFO) << "request received, need to do something with this request now";
 
-	return new RenderProxyHandler(new CefBrowserHandler());
+	// The proxy handler and the browser handler are killed automatically, so we don't need to keep references here
+	return new RenderProxyHandler(CefRefPtr<CefBrowserHandler>(new CefBrowserHandler()));
 }
 
 

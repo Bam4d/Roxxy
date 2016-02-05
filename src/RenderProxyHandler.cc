@@ -26,11 +26,10 @@ using folly::toJson;
 
 using namespace proxygen;
 
-RenderProxyHandler::RenderProxyHandler(CefBrowserHandler* browserHandler) {
+RenderProxyHandler::RenderProxyHandler(CefRefPtr<CefBrowserHandler> browserHandler) {
 	LOG(INFO) << "ProxyHandler created.";
 
 	browserHandler_ = browserHandler;
-
 }
 
 RenderProxyHandler::~RenderProxyHandler() {
@@ -59,7 +58,7 @@ void RenderProxyHandler::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {
 
 void RenderProxyHandler::onEOM() noexcept {
 	LOG(INFO)<< "Body received.";
-
+	DCHECK(browserHandler_ != nullptr);
 	// Create browser and then only give the response when we have rendered, probably want to send rendered html
 
 	try {
@@ -69,11 +68,8 @@ void RenderProxyHandler::onEOM() noexcept {
 		LOG(INFO) << "URL is :" << toPrettyJson(url);
 		this->url = url.asString().toStdString();
 
-		LOG(INFO) << "browsahhh" << toPrettyJson(url);
-
 		// Start the browser on "about:blank"
 		browserHandler_->StartBrowserSession(this);
-		LOG(INFO) << "browsahhh" << toPrettyJson(url);
 
 	} catch(...) {
 		ResponseBuilder(downstream_).status(400, "BAD_REQUEST")
@@ -88,12 +84,14 @@ void RenderProxyHandler::onUpgrade(UpgradeProtocol protocol) noexcept {
 }
 
 void RenderProxyHandler::requestComplete() noexcept {
+	DCHECK(browserHandler_ != nullptr);
 	LOG(INFO)<< "Request complete.";
 	browserHandler_->EndBrowserSession();
 	delete this;
 }
 
 void RenderProxyHandler::onError(ProxygenError err) noexcept {
+	DCHECK(browserHandler_ != nullptr);
 	LOG(WARNING) << "Request error";
 	browserHandler_->EndBrowserSession();
 	delete this;
