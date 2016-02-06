@@ -10,6 +10,7 @@
 
 #include "include/cef_client.h"
 
+class BrowserPool;
 class RenderProxyHandler;
 
 class CefBrowserHandler : public CefClient,
@@ -59,16 +60,8 @@ public:
 
 private:
 
-	// The proxy handler that has started the browser
-	RenderProxyHandler* renderProxyHandler_;
+	BrowserPool* browserPool_;
 
-	// The current browser being handled
-	//typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
-	//BrowserList browsers_;
-
-	CefRefPtr<CefBrowser> browser_ = nullptr;
-
-	bool is_closing_ = false;
 
 	virtual void setBrowserUrl(const CefString& url);
 
