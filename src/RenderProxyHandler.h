@@ -11,11 +11,12 @@
 #include <folly/Memory.h>
 #include <proxygen/httpserver/RequestHandler.h>
 
-#include "CefBrowserHandler.h"
+// Forward declarations
+class BrowserPool;
 
 class RenderProxyHandler: public proxygen::RequestHandler {
 public:
-	RenderProxyHandler(CefRefPtr<CefBrowserHandler> browserHandler);
+	RenderProxyHandler(BrowserPool* browserHandler);
 	virtual ~RenderProxyHandler();
 
 	void SendResponse(std::string response_data);
@@ -25,7 +26,7 @@ public:
 
 private:
 
-	CefRefPtr<CefBrowserHandler> browserHandler_;
+	BrowserPool* browserPool_;
 
 	// Want to store a reference to the event base for folly
 	folly::EventBase* evb;

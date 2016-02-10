@@ -14,8 +14,7 @@
 #include <proxygen/httpserver/HTTPServer.h>
 #include <proxygen/httpserver/RequestHandlerFactory.h>
 
-#include "include/cef_browser.h"
-#include "CefBrowserHandler.h"
+class BrowserPool;
 
 using namespace proxygen;
 
@@ -33,7 +32,7 @@ class RenderProxyHandlerFactory : public RequestHandlerFactory {
 		// Port number that the server will listen on
 		int port_ = 80;
 
-		CefBrowserHandler* browserHandler_;
+		BrowserPool* browserPool_;
 };
 
 #endif /* RENDERPROXYHANDLERFACTORY_H_ */

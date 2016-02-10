@@ -17,31 +17,27 @@
 #include "include/wrapper/cef_helpers.h"
 
 #include "RenderProxyHandler.h"
+#include "BrowserPool.h"
 
-CefBrowserHandler::CefBrowserHandler() {
+CefBrowserHandler::CefBrowserHandler(BrowserPool* browserPool) {
 	// TODO Auto-generated constructor stub
 	LOG(INFO) << "starting browser handler";
+
+	browserPool_ = browserPool;
+
+	freeBrowserList_ = new MPMCQueue<CefBrowser*>(browserPool->Size());
+
 }
 
 CefBrowserHandler::~CefBrowserHandler() {
 	// TODO Auto-generated destructor stub
 	LOG(INFO) << "killing browser handler";
+
+	delete freeBrowserList_;
 }
 
-void CefBrowserHandler::StartBrowserSession(RenderProxyHandler* renderProxyHandler) {
-
-	// the render proxy will destroy itself when data is sent,
-	// so we don't need to do anything "smart" with pointers here
-	renderProxyHandler_ = renderProxyHandler;
-
-	if (!CefCurrentlyOn(TID_UI)) {
-		// Execute on the UI thread.
-		CefPostTask(TID_UI,
-				base::Bind(&CefBrowserHandler::StartBrowserSession, this, renderProxyHandler));
-		return;
-	}
-
-	LOG(INFO) << "Starting browser.";
+void CefBrowserHandler::Initialize() {
+	LOG(INFO) << "Starting browsers.";
 
 	// Information used when creating the native window.
 	CefWindowInfo window_info;
@@ -53,31 +49,52 @@ void CefBrowserHandler::StartBrowserSession(RenderProxyHandler* renderProxyHandl
 	browser_settings.application_cache = STATE_DISABLED;
 	browser_settings.image_loading = STATE_DISABLED;
 
-	// Create our browser here
-	CefBrowserHost::CreateBrowser(window_info, this, "about:blank",
-			browser_settings, NULL);
+	for(int i = 0; i<browserPool_->Size(); i++) {
+		LOG(INFO) << "Starting Browser: " << i;
+		CefBrowserHost::CreateBrowser(window_info, this, "about:blank",
+				browser_settings, NULL);
+	}
 }
 
-void CefBrowserHandler::setBrowserUrl(const CefString& url) {
-	DCHECK(browser_ != NULL);
+/**
+ * Return a plain old pointer to the browser we have grabbed from the queue
+ */
+CefBrowser* CefBrowserHandler::GetFreeBrowser() {
+	CefBrowser* browser;
+	freeBrowserList_->blockingRead(browser);
+	return browser;
+}
+
+/**
+ *
+ */
+void CefBrowserHandler::StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler) {
+
+	setBrowserUrl(browser, renderProxyHandler->url);
+}
+
+void CefBrowserHandler::setBrowserUrl(CefBrowser* browser, const CefString& url) {
+	DCHECK(browser != NULL);
 
 	if (!CefCurrentlyOn(TID_UI)) {
 		// Execute on the UI thread.
 		CefPostTask(TID_UI,
-				base::Bind(&CefBrowserHandler::setBrowserUrl, this, url));
+				base::Bind(&CefBrowserHandler::setBrowserUrl, this, browser, url));
 		return;
 	}
 
-	// have to validate the url here!!
-	browser_->GetMainFrame()->LoadURL(url);
+	LOG(INFO) << "Setting browser url: " << url.ToString();
+	browser->GetMainFrame()->LoadURL(url);
+
 }
 
 /**
  * Handler methods for the browser
  */
 void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
-	DCHECK(browser_ == NULL);
-	browser_ = browser;
+	browserList_.push_back(browser);
+	freeBrowserList_->blockingWrite(browser.get());
+	setBrowserUrl(browser, "about:blank");
 }
 
 bool CefBrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -96,7 +113,7 @@ void CefBrowserHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 
 void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) {
 	CEF_REQUIRE_UI_THREAD();
-	DCHECK(renderProxyHandler_ != nullptr);
+	//DCHECK(renderProxyHandler_ != nullptr);
 	LOG(WARNING) << "LOAD ERROR";
 
 	// Don't display an error for downloaded files.
@@ -111,22 +128,11 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 			<< ").</h2></body></html>";
 
 
-	renderProxyHandler_->SendResponse(ss.str());
+	//renderProxyHandler_->SendResponse(ss.str());
 }
 
-void CefBrowserHandler::EndBrowserSession() {
-	if(browser_ == nullptr) return;
-
-	if (!CefCurrentlyOn(TID_UI)) {
-		// Execute on the UI thread.
-		CefPostTask(TID_UI,
-				base::Bind(&CefBrowserHandler::EndBrowserSession, this));
-		return;
-	}
-
-	LOG(INFO)<< "Closing browser.";
-	browser_->StopLoad();
-	browser_->GetHost()->CloseBrowser(false);
+void CefBrowserHandler::EndBrowserSession(CefRefPtr<CefBrowser> browser) {
+	setBrowserUrl(browser, "about:blank");
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
@@ -134,23 +140,23 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 	//LOG(INFO) << "isLoading " << isLoading;
 	//LOG(INFO) << "canGoBack " << canGoBack;
 	//LOG(INFO) << "canGoForward " << canGoForward;
-	DCHECK(renderProxyHandler_ != nullptr);
+	//DCHECK(renderProxyHandler_ != nullptr);
 	if(!isLoading) {
 
 		// We load to about blank to zero the state of the browser
 		// TODO: is this necessary?
-		//LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
+		LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
 
 		if(isAboutBlank) {
 				// Set the browser url once it is loaded to the "about-blank" state
-				setBrowserUrl(renderProxyHandler_->url);
+				//setBrowserUrl(renderProxyHandler_->url);
 			return;
 		}
 
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack) {
-			renderProxyHandler_->SendResponse("stuff here");
+			browserPool_->SendResponse(browser.get(), "stuff here");
 		}
 	}
 }

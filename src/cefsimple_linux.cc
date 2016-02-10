@@ -69,6 +69,10 @@ int main(int argc, char* argv[]) {
 		CHECK(FLAGS_threads > 0);
 	}
 
+	LOG(INFO)<< "Initializing cef";
+	// Initialize CEF for the browser process.
+	CefInitialize(main_args, settings, app.get(), NULL);
+
 	HTTPServerOptions options;
 	options.threads = static_cast<size_t>(FLAGS_threads);
 	options.idleTimeout = std::chrono::milliseconds(30000);
@@ -85,10 +89,6 @@ int main(int argc, char* argv[]) {
 	std::thread t([&] () {
 		server.start();
 	});
-
-	LOG(INFO)<< "initializing cef";
-	// Initialize CEF for the browser process.
-	CefInitialize(main_args, settings, app.get(), NULL);
 
 	// Run the CEF message loop. This will block until CefQuitMessageLoop() is
 	// called.

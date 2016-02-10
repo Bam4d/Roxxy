@@ -23,13 +23,14 @@ using folly::toJson;
  */
 #include "utils/Logging.h"
 #include "utils/BufferUtils.h"
+#include "BrowserPool.h"
 
 using namespace proxygen;
 
-RenderProxyHandler::RenderProxyHandler(CefRefPtr<CefBrowserHandler> browserHandler) {
+RenderProxyHandler::RenderProxyHandler(BrowserPool* browserPool) {
 	LOG(INFO) << "ProxyHandler created.";
 
-	browserHandler_ = browserHandler;
+	browserPool_ = browserPool;
 }
 
 RenderProxyHandler::~RenderProxyHandler() {
@@ -45,6 +46,8 @@ void RenderProxyHandler::onRequest(std::unique_ptr<HTTPMessage> headers)
 
 	LOG(INFO)<< "Headers received.";
 
+	browserPool_->AssignBrowserSync(this);
+
 }
 
 void RenderProxyHandler::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {
@@ -58,7 +61,7 @@ void RenderProxyHandler::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {
 
 void RenderProxyHandler::onEOM() noexcept {
 	LOG(INFO)<< "Body received.";
-	DCHECK(browserHandler_ != nullptr);
+	DCHECK(browserPool_ != nullptr);
 	// Create browser and then only give the response when we have rendered, probably want to send rendered html
 
 	try {
@@ -68,8 +71,7 @@ void RenderProxyHandler::onEOM() noexcept {
 		LOG(INFO) << "URL is :" << toPrettyJson(url);
 		this->url = url.asString().toStdString();
 
-		// Start the browser on "about:blank"
-		browserHandler_->StartBrowserSession(this);
+		browserPool_->StartBrowserSession(this);
 
 	} catch(...) {
 		ResponseBuilder(downstream_).status(400, "BAD_REQUEST")
@@ -84,21 +86,23 @@ void RenderProxyHandler::onUpgrade(UpgradeProtocol protocol) noexcept {
 }
 
 void RenderProxyHandler::requestComplete() noexcept {
-	DCHECK(browserHandler_ != nullptr);
+	DCHECK(browserPool_ != nullptr);
 	LOG(INFO)<< "Request complete.";
-	browserHandler_->EndBrowserSession();
+	//browserHandler_->EndBrowserSession();
 	delete this;
 }
 
 void RenderProxyHandler::onError(ProxygenError err) noexcept {
-	DCHECK(browserHandler_ != nullptr);
+	DCHECK(browserPool_ != nullptr);
 	LOG(WARNING) << "Request error";
-	browserHandler_->EndBrowserSession();
+	//browserHandler_->EndBrowserSession();
 	delete this;
 }
 
-void RenderProxyHandler::SendResponse(std::string response) {
+void RenderProxyHandler::SendResponse(std::string responseContent) {
 	DCHECK(evb != nullptr);
+
+	LOG(INFO) << "Sending response " << responseContent;
 
 	evb->runInEventBaseThread([&] () {
 

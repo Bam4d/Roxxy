@@ -9,9 +9,14 @@
 #define CEFBROWSERHANDLER_H_
 
 #include "include/cef_client.h"
+#include "folly/MPMCQueue.h"
+#include <list>
 
 class BrowserPool;
 class RenderProxyHandler;
+
+using namespace folly;
+
 
 class CefBrowserHandler : public CefClient,
 		public CefDisplayHandler,
@@ -19,7 +24,7 @@ class CefBrowserHandler : public CefClient,
 		public CefLoadHandler,
 		public CefRenderHandler {
 public:
-	CefBrowserHandler();
+	CefBrowserHandler(BrowserPool* browserPool);
 	virtual ~CefBrowserHandler();
 
 	// CefRenderHandler methods:
@@ -49,21 +54,25 @@ public:
 		return this;
 	}
 
+	virtual CefBrowser* GetFreeBrowser();
+
 	// End the session with the browser.
-	void EndBrowserSession();
+	virtual void EndBrowserSession(CefRefPtr<CefBrowser> browser);
 
-	virtual void StartBrowserSession(RenderProxyHandler* renderProxyHandler);
+	virtual void StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler);
 
-	bool IsClosing() const {
-		return is_closing_;
-	}
+	virtual void Initialize();
 
 private:
 
 	BrowserPool* browserPool_;
+	typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
+	BrowserList browserList_;
 
 
-	virtual void setBrowserUrl(const CefString& url);
+	MPMCQueue<CefBrowser*>* freeBrowserList_;
+
+	virtual void setBrowserUrl(CefBrowser* browser, const CefString& url);
 
 	// CefDisplayHandler methods:
 	virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;

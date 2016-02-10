@@ -6,28 +6,30 @@
  */
 
 #include "RenderProxyHandlerFactory.h"
-
 #include "include/base/cef_logging.h"
+
 #include "RenderProxyHandler.h"
+#include "BrowserPool.h"
 
 
 RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port) {
 	port_ = port;
 	LOG(INFO) << "ProxygenServer server starting....";
 
-	// Do something smart here like pool browsers.
-	//Don't want to start and stop browser instances all the time, this is probably inefficient
-	//browserHandler_ = new CefBrowserHandler();
+	// Pool browsers here
+	browserPool_ = new BrowserPool(10);
+	browserPool_->Initialize();
 }
 
 
 RenderProxyHandlerFactory::~RenderProxyHandlerFactory() {
 	LOG(INFO) << "destroying RenderProxyHandlerFactory";
-	//delete browserHandler_;
+	delete browserPool_;
 }
 
 void RenderProxyHandlerFactory::onServerStart(folly::EventBase* evb) noexcept {
 	LOG(INFO) << "Cef server started, listening for connections on port: " << port_;
+
 }
 
 void RenderProxyHandlerFactory::onServerStop() noexcept {
@@ -38,7 +40,7 @@ RequestHandler* RenderProxyHandlerFactory::onRequest(RequestHandler* handler, HT
 	LOG(INFO) << "request received, need to do something with this request now";
 
 	// The proxy handler and the browser handler are killed automatically, so we don't need to keep references here
-	return new RenderProxyHandler(CefRefPtr<CefBrowserHandler>(new CefBrowserHandler()));
+	return new RenderProxyHandler(browserPool_);
 }
 
 
