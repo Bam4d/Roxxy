@@ -57,9 +57,9 @@ public:
 	virtual CefBrowser* GetFreeBrowser();
 
 	// End the session with the browser.
-	virtual void EndBrowserSession(CefRefPtr<CefBrowser> browser);
+	virtual void EndBrowserSession(CefBrowser* browser);
 
-	virtual void StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler);
+	virtual void StartBrowserSession(CefBrowser* browser, RenderProxyHandler* renderProxyHandler);
 
 	virtual void Initialize();
 

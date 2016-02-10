@@ -62,19 +62,22 @@ void CefBrowserHandler::Initialize() {
 CefBrowser* CefBrowserHandler::GetFreeBrowser() {
 	CefBrowser* browser;
 	freeBrowserList_->blockingRead(browser);
+	LOG(INFO) << "BROWSER POINTER" << reinterpret_cast<int64_t>(browser);
 	return browser;
 }
 
 /**
  *
  */
-void CefBrowserHandler::StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler) {
+void CefBrowserHandler::StartBrowserSession(CefBrowser* browser, RenderProxyHandler* renderProxyHandler) {
 
 	setBrowserUrl(browser, renderProxyHandler->url);
 }
 
 void CefBrowserHandler::setBrowserUrl(CefBrowser* browser, const CefString& url) {
 	DCHECK(browser != NULL);
+
+	LOG(INFO) << "BROWSER POINTER" << reinterpret_cast<int64_t>(browser);
 
 	if (!CefCurrentlyOn(TID_UI)) {
 		// Execute on the UI thread.
@@ -131,7 +134,7 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 	//renderProxyHandler_->SendResponse(ss.str());
 }
 
-void CefBrowserHandler::EndBrowserSession(CefRefPtr<CefBrowser> browser) {
+void CefBrowserHandler::EndBrowserSession(CefBrowser* browser) {
 	setBrowserUrl(browser, "about:blank");
 }
 
@@ -145,6 +148,7 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 
 		// We load to about blank to zero the state of the browser
 		// TODO: is this necessary?
+		LOG(INFO) << "BROWSER POINTER" << reinterpret_cast<int64_t>(browser.get());
 		LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
 
