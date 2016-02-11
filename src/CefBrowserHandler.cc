@@ -25,7 +25,7 @@ CefBrowserHandler::CefBrowserHandler(BrowserPool* browserPool) {
 
 	browserPool_ = browserPool;
 
-	freeBrowserList_ = new MPMCQueue<CefBrowser*>(browserPool->Size());
+	freeBrowserList_ = new MPMCQueue<int>(browserPool->Size());
 
 }
 
@@ -57,27 +57,39 @@ void CefBrowserHandler::Initialize() {
 }
 
 /**
- * Return a plain old pointer to the browser we have grabbed from the queue
+ * Grab a free browser from the free browser list
  */
-CefBrowser* CefBrowserHandler::GetFreeBrowser() {
-	CefBrowser* browser;
-	freeBrowserList_->blockingRead(browser);
-	LOG(INFO) << "BROWSER POINTER" << reinterpret_cast<int64_t>(browser);
-	return browser;
+CefRefPtr<CefBrowser> CefBrowserHandler::PopFreeBrowser() {
+	int browserId;
+
+	freeBrowserList_->blockingRead(browserId);
+
+	return getBrowserById(browserId);
+}
+
+
+/**
+ * Get the browser based on it's unique Id
+ */
+CefRefPtr<CefBrowser> CefBrowserHandler::getBrowserById(int id) {
+	for(auto browser : browserList_) {
+		if(browser->GetIdentifier() == id) {
+			return browser;
+		}
+	}
+	return nullptr;
 }
 
 /**
  *
  */
-void CefBrowserHandler::StartBrowserSession(CefBrowser* browser, RenderProxyHandler* renderProxyHandler) {
+void CefBrowserHandler::StartBrowserSession(int browserId, RenderProxyHandler* renderProxyHandler) {
 
-	setBrowserUrl(browser, renderProxyHandler->url);
+	setBrowserUrl(getBrowserById(browserId), renderProxyHandler->url);
 }
 
-void CefBrowserHandler::setBrowserUrl(CefBrowser* browser, const CefString& url) {
-	DCHECK(browser != NULL);
-
-	LOG(INFO) << "BROWSER POINTER" << reinterpret_cast<int64_t>(browser);
+void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url) {
+	DCHECK(browser != nullptr);
 
 	if (!CefCurrentlyOn(TID_UI)) {
 		// Execute on the UI thread.
@@ -96,8 +108,9 @@ void CefBrowserHandler::setBrowserUrl(CefBrowser* browser, const CefString& url)
  */
 void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 	browserList_.push_back(browser);
-	freeBrowserList_->blockingWrite(browser.get());
+
 	setBrowserUrl(browser, "about:blank");
+	freeBrowserList_->blockingWrite(browser->GetIdentifier());
 }
 
 bool CefBrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -134,33 +147,33 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 	//renderProxyHandler_->SendResponse(ss.str());
 }
 
-void CefBrowserHandler::EndBrowserSession(CefBrowser* browser) {
-	setBrowserUrl(browser, "about:blank");
+void CefBrowserHandler::EndBrowserSession(int browserId) {
+	setBrowserUrl(getBrowserById(browserId), "about:blank");
+	// Set the browser url once it is loaded to the "about-blank" state
+	freeBrowserList_->blockingWrite(browserId);
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
-	//LOG(INFO) << "Loading state change";
-	//LOG(INFO) << "isLoading " << isLoading;
-	//LOG(INFO) << "canGoBack " << canGoBack;
-	//LOG(INFO) << "canGoForward " << canGoForward;
-	//DCHECK(renderProxyHandler_ != nullptr);
+	LOG(INFO) << "Loading state change";
+	LOG(INFO) << "isLoading " << isLoading;
+	LOG(INFO) << "canGoBack " << canGoBack;
+	LOG(INFO) << "canGoForward " << canGoForward;
 	if(!isLoading) {
 
-		// We load to about blank to zero the state of the browser
-		// TODO: is this necessary?
-		LOG(INFO) << "BROWSER POINTER" << reinterpret_cast<int64_t>(browser.get());
-		LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
 
 		if(isAboutBlank) {
-				// Set the browser url once it is loaded to the "about-blank" state
-				//setBrowserUrl(renderProxyHandler_->url);
+
 			return;
 		}
 
+		// We load to about blank to zero the state of the browser
+		//LOG(INFO) << "BROWSER_ID " << browser->GetIdentifier();
+		LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
+
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack) {
-			browserPool_->SendResponse(browser.get(), "stuff here");
+			browserPool_->SendResponse(browser->GetIdentifier(), "stuff here");
 		}
 	}
 }

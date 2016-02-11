@@ -88,14 +88,14 @@ void RenderProxyHandler::onUpgrade(UpgradeProtocol protocol) noexcept {
 void RenderProxyHandler::requestComplete() noexcept {
 	DCHECK(browserPool_ != nullptr);
 	LOG(INFO)<< "Request complete.";
-	//browserHandler_->EndBrowserSession();
+	browserPool_->ReleaseBrowserSync(this);
 	delete this;
 }
 
 void RenderProxyHandler::onError(ProxygenError err) noexcept {
 	DCHECK(browserPool_ != nullptr);
 	LOG(WARNING) << "Request error";
-	//browserHandler_->EndBrowserSession();
+	browserPool_->ReleaseBrowserSync(this);
 	delete this;
 }
 
