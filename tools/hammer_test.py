@@ -7,7 +7,7 @@ if __name__ == '__main__':
     for i in range(0,1000):
 
 
-        res = requests.post('http://localhost:8055', data=json.dumps({"url": "https://import.io"}))
+        res = requests.post('http://localhost:8055', data=json.dumps({"url": "https://doom.import.io"}))
 
         count += 1
         #print res.text

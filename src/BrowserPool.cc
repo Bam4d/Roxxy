@@ -20,23 +20,12 @@
  * The browser pool is a resource manager for CefBrowsers, responsible for allocating browsers from incoming requests
  */
 BrowserPool::BrowserPool(int browsers) {
-
 	DCHECK(browsers <= 200);
-
-	int routingMapSize = browsers<10 ? 10:browsers;
-
-	browserIdToHandler_ = new folly::AtomicHashMap<int64_t, int64_t>(routingMapSize);
-	handlerToBrowserId_ = new folly::AtomicHashMap<int64_t, int64_t>(routingMapSize);
-
 	numBrowsers_ = browsers;
-
 }
 
 BrowserPool::~BrowserPool() {
-	// TODO Auto-generated destructor stub
 	delete browserHandler_;
-	delete browserIdToHandler_;
-	delete handlerToBrowserId_;
 }
 
 void BrowserPool::Initialize() {
@@ -58,8 +47,8 @@ int BrowserPool::AssignBrowserSync(RenderProxyHandler* renderProxyHandler) {
 	int browserId = freeBrowser->GetIdentifier();
 
 	// Then we assign it to the handler
-	browserIdToHandler_->insert(browserId, reinterpret_cast<int64_t>(renderProxyHandler));
-	handlerToBrowserId_->insert(reinterpret_cast<int64_t>(renderProxyHandler), browserId);
+	browserIdToHandler_.insert(std::make_pair(browserId, renderProxyHandler));
+	handlerToBrowserId_.insert(std::make_pair(renderProxyHandler, browserId));
 	return browserId;
 }
 
@@ -71,8 +60,8 @@ void BrowserPool::ReleaseBrowserSync(RenderProxyHandler* renderProxyHandler) {
 
 	// Remove from the routing maps
 	int freeBrowserId = GetAssignedBrowserId(renderProxyHandler);
-	browserIdToHandler_->erase(freeBrowserId);
-	handlerToBrowserId_->erase(reinterpret_cast<int64_t>(renderProxyHandler));
+	browserIdToHandler_.erase(freeBrowserId);
+	handlerToBrowserId_.erase(renderProxyHandler);
 
 	// Add back to the freeBrowser list
 	browserHandler_->EndBrowserSession(freeBrowserId);
@@ -91,19 +80,16 @@ void BrowserPool::StartBrowserSession(RenderProxyHandler* renderProxyHandler) {
 }
 
 // Get the render proxy handler for a specific browser
-RenderProxyHandler* BrowserPool::GetAssignedRenderProxyHandler(int browserId){
-	//DCHECK(browserId != nullptr);
-	auto ret = browserIdToHandler_->find(browserId);
-	DCHECK(ret != browserIdToHandler_->end());
-	return reinterpret_cast<RenderProxyHandler*>(ret->second);
+RenderProxyHandler* BrowserPool::GetAssignedRenderProxyHandler(int browserId) {
+	DCHECK(browserIdToHandler_.find(browserId) != browserIdToHandler_.end());
+	return browserIdToHandler_[browserId];
 }
 
 // Get the assigned browser for the renderProxyHandler
-int BrowserPool::GetAssignedBrowserId(RenderProxyHandler* renderProxyHandler){
+int BrowserPool::GetAssignedBrowserId(RenderProxyHandler* renderProxyHandler) {
 	DCHECK(renderProxyHandler != nullptr);
-	auto ret = handlerToBrowserId_->find(reinterpret_cast<int64_t>(renderProxyHandler));
-	DCHECK(ret != handlerToBrowserId_->end());
-	return ret->second;
+	DCHECK(handlerToBrowserId_.find(renderProxyHandler) != handlerToBrowserId_.end());
+	return handlerToBrowserId_[renderProxyHandler];
 }
 
 int BrowserPool::Size() {

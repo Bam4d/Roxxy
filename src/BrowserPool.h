@@ -8,8 +8,8 @@
 #ifndef BROWSERPOOL_H_
 #define BROWSERPOOL_H_
 
-#include <folly/AtomicHashMap.h>
 #include <list>
+#include <map>
 
 #include "include/wrapper/cef_helpers.h"
 
@@ -52,10 +52,10 @@ private:
 	int numBrowsers_;
 
 	// Keeps a map of handlers to their respective browsers
-	folly::AtomicHashMap<int64_t, int64_t>* browserIdToHandler_;
+	std::map<int, RenderProxyHandler*> browserIdToHandler_;
 
 	// Keeps a map of browsers to their repective handlers
-	folly::AtomicHashMap<int64_t, int64_t>* handlerToBrowserId_;
+	std::map<RenderProxyHandler*, int> handlerToBrowserId_;
 
 	CefRefPtr<CefBrowserHandler> browserHandler_;
 };
