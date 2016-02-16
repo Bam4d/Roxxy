@@ -38,13 +38,15 @@ RenderProxyHandler::~RenderProxyHandler() {
 	// TODO Auto-generated destructor stub
 }
 
-void RenderProxyHandler::onRequest(std::unique_ptr<HTTPMessage> headers)
+void RenderProxyHandler::onRequest(std::unique_ptr<HTTPMessage> request)
 		noexcept {
 
 	// Have to store the evb in this object so we can re-use the thread to send responses
 	evb = folly::EventBaseManager::get()->getExistingEventBase();
 
 	LOG(INFO)<< "Headers received.";
+
+	request_ = std::move(request);
 
 	browserPool_->AssignBrowserSync(this);
 
@@ -65,18 +67,24 @@ void RenderProxyHandler::onEOM() noexcept {
 	// Create browser and then only give the response when we have rendered, probably want to send rendered html
 
 	try {
-		dynamic jsonData = BufferUtils::getJson(std::move(requestBody_));
-		dynamic url = jsonData["url"];
 
-		LOG(INFO) << "URL is :" << toPrettyJson(url);
-		this->url = url.asString().toStdString();
+		std::string getUrl = request_->getDecodedQueryParam("url");
 
-		browserPool_->StartBrowserSession(this);
+		if(!getUrl.empty()){
+			this->url = getUrl;
+			browserPool_->StartBrowserSession(this);
+		} else {
+			ResponseBuilder(downstream_)
+				.status(400, "BAD_REQUEST")
+				.body("Url get parameter must be set, for example http://roxxyserver?url=http%3A%2F%2Fwww.google.com%0A")
+				.sendWithEOM();
+		}
 
 	} catch(...) {
-		ResponseBuilder(downstream_).status(400, "BAD_REQUEST")
-		.body("bad data sent")
-		.sendWithEOM();
+		ResponseBuilder(downstream_)
+			.status(400, "BAD_REQUEST")
+			.body("Cannot process request.")
+			.sendWithEOM();
 	}
 
 }

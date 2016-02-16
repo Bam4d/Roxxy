@@ -10,6 +10,7 @@
 
 #include <folly/Memory.h>
 #include <proxygen/httpserver/RequestHandler.h>
+#include <proxygen/lib/http/HTTPMessage.h>
 
 // Forward declarations
 class BrowserPool;
@@ -26,6 +27,8 @@ public:
 
 private:
 
+	std::unique_ptr<proxygen::HTTPMessage> request_;
+
 	BrowserPool* browserPool_;
 
 	// Want to store a reference to the event base for folly
@@ -35,7 +38,7 @@ private:
 	std::unique_ptr<folly::IOBuf> requestBody_;
 
 	// When there are request headers
-	void onRequest(std::unique_ptr<proxygen::HTTPMessage> headers)
+	void onRequest(std::unique_ptr<proxygen::HTTPMessage> request)
 			noexcept override;
 
 	// We have a body
