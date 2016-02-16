@@ -104,13 +104,9 @@ void RenderProxyHandler::SendResponse(std::string responseContent) {
 
 	LOG(INFO) << "Sending response " << responseContent;
 
-	evb->runInEventBaseThread([&] () {
+	evb->runInEventBaseThread([&, responseContent] () {
 
-		std::stringstream ss;
-			ss << "<html><body bgcolor=\"white\">"
-					"<h2>DONE</h2></body></html>";
-
-		std::string response = ss.str();
+		std::string response = responseContent;
 
 		ResponseBuilder(downstream_).status(200, "OK")
 				.body(response)

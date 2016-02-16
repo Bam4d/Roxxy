@@ -54,14 +54,16 @@ public:
 		return this;
 	}
 
-	virtual CefRefPtr<CefBrowser> PopFreeBrowser();
+	CefRefPtr<CefBrowser> PopFreeBrowser();
 
 	// End the session with the browser.
-	virtual void EndBrowserSession(int browserId);
+	void EndBrowserSession(int browserId);
 
-	virtual void StartBrowserSession(int browserId, RenderProxyHandler* renderProxyHandler);
+	void StartBrowserSession(int browserId, RenderProxyHandler* renderProxyHandler);
 
-	virtual void Initialize();
+	void Initialize();
+
+	void OnSourceVisited(const CefString& string, int browserId);
 
 private:
 
@@ -72,14 +74,14 @@ private:
 	typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
 	BrowserList browserList_;
 
-	virtual CefRefPtr<CefBrowser> getBrowserById(int id);
+	CefRefPtr<CefBrowser> getBrowserById(int id);
 
 	MPMCQueue<int>* freeBrowserList_;
 
-	virtual void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
+	void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
 
 	// CefDisplayHandler methods:
-	virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
+	void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
 
 	// CefLifeSpanHandler methods:
 	virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;

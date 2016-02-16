@@ -18,6 +18,7 @@
 
 #include "RenderProxyHandler.h"
 #include "BrowserPool.h"
+#include "SourceVisitor.h"
 
 CefBrowserHandler::CefBrowserHandler(BrowserPool* browserPool) {
 	// TODO Auto-generated constructor stub
@@ -154,10 +155,10 @@ void CefBrowserHandler::EndBrowserSession(int browserId) {
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
-//	LOG(INFO) << "Loading state change";
-//	LOG(INFO) << "isLoading " << isLoading;
-//	LOG(INFO) << "canGoBack " << canGoBack;
-//	LOG(INFO) << "canGoForward " << canGoForward;
+	LOG(INFO) << "Loading state change";
+	LOG(INFO) << "isLoading " << isLoading;
+	LOG(INFO) << "canGoBack " << canGoBack;
+	LOG(INFO) << "canGoForward " << canGoForward;
 	if(!isLoading) {
 
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
@@ -173,9 +174,13 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack) {
-			browserPool_->SendResponse(browser->GetIdentifier(), "stuff here");
+			browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 		}
 	}
+}
+
+void CefBrowserHandler::OnSourceVisited(const CefString& string, int browserId) {
+	browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse(string);
 }
 
 void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) {

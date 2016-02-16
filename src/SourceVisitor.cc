@@ -6,10 +6,11 @@
  */
 
 #include "SourceVisitor.h"
+#include "CefBrowserHandler.h"
 
-SourceVisitor::SourceVisitor(CefRefPtr<CefBrowserHandler> browserHandler) {
-
+SourceVisitor::SourceVisitor(CefBrowserHandler* browserHandler, int browserId) {
 	browserHandler_ = browserHandler;
+	browserId_ = browserId;
 }
 
 SourceVisitor::~SourceVisitor() {
@@ -17,6 +18,8 @@ SourceVisitor::~SourceVisitor() {
 }
 
 // Called asynchronously when the HTML contents are available.
-virtual void SourceVisitor::Visit(const CefString& string) {
+void SourceVisitor::Visit(const CefString& string) {
 
+	LOG(INFO)<< "got page source";
+	browserHandler_->OnSourceVisited(string, browserId_);
 }

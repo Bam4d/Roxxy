@@ -41,7 +41,8 @@ void BrowserPool::Initialize() {
 // This will block until a browser is available
 int BrowserPool::AssignBrowserSync(RenderProxyHandler* renderProxyHandler) {
 	DCHECK(renderProxyHandler != nullptr);
-	//TODO: NEED TO LOCK THIS FUNCTION
+
+	std::lock_guard<std::mutex> lock(browser_routing_mutex);
 
 	CefRefPtr<CefBrowser> freeBrowser = browserHandler_->PopFreeBrowser();
 	int browserId = freeBrowser->GetIdentifier();
@@ -56,7 +57,7 @@ int BrowserPool::AssignBrowserSync(RenderProxyHandler* renderProxyHandler) {
  * The request has finished so release the browser back to the pool
  */
 void BrowserPool::ReleaseBrowserSync(RenderProxyHandler* renderProxyHandler) {
-	//TODO: NEED TO LOCK THIS FUNCTION
+	std::lock_guard<std::mutex> lock(browser_routing_mutex);
 
 	// Remove from the routing maps
 	int freeBrowserId = GetAssignedBrowserId(renderProxyHandler);

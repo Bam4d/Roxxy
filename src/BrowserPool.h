@@ -10,6 +10,7 @@
 
 #include <list>
 #include <map>
+#include <mutex>
 
 #include "include/wrapper/cef_helpers.h"
 
@@ -48,6 +49,8 @@ public:
 	void Initialize();
 
 private:
+
+	std::mutex browser_routing_mutex;
 
 	int numBrowsers_;
 
