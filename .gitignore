@@ -45,6 +45,9 @@ Release/
 # Ignore pycharm stuff
 .idea/
 
+# Ignore gradle stuff
+.gradle/
+build/
 
 *.log
 cefsimple
