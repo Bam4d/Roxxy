@@ -17,9 +17,22 @@ Super simple script (python/ruby/etc..) -> Roxxy -> Complicated website
 
 Roxxy takes away all of the complicated javascript and rendering processes and leaves you with a super simple html page.
 
+## How?
+
+Roxxy uses facebook's Proxygen server library to wrap Chromium Embedded Framework as a headless browser.
+
+Concurrency is achieved by starting several browser instances (currently 20 because its hard coded) and putting them into a pool. Each browser is assigned one incoming request at a time, as soon as the HTML has been rendered, this browser is returned back to the pool.
+
+In theory on large servers, the browser pool could consist of several hundred browsers.. meaning very high throughput
+
 ## Building
 
 .. coming soon i need to write a script... :(
+
+Download and install proxygen
+Download the ceflibs.tar.gz that I need to put online somewhere
+Gradlew?
+
 
 ## Usage
 
@@ -45,8 +58,13 @@ Go ahead, use this as much as you want.
 
 ## Contributing
 
-Because this uses alot of C++ libraries
+Because this uses alot of C++ libraries I'd love some help! Especially from anyone who knows alot about chromium and facebook libraries.
 
 ## Improvements
 
-Generate
+* Could make this scriptable, so scripts can be run on the browser?
+* Transparent proxy mode
+
+## Benchmarks
+
+I would love to benchmark this against phantomJS and any other qtWebKit / pyWebKit server.
