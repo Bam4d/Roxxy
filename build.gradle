@@ -1,14 +1,11 @@
 apply plugin: 'cpp'
 
-def cefBinaryPath = file("../cef_binary_linux64").absolutePath
+def cefResourcePath = file("ceflib").absolutePath
 
 def cefResources = copySpec {
-    from(cefBinaryPath+"/Resources") {
+    from(cefResourcePath) {
         include "*"
-    }
-    from(cefBinaryPath+"/Release") {
-        include "libcef.so"
-        include "*.bin"
+	include "locales/*"
     }
 }
 
@@ -45,8 +42,8 @@ model {
         all {
             // Linker and compiler arguments
             if (toolChain in Gcc) {
-                cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefBinaryPath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
-                linker.args "-lglog", "-ldouble-conversion", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefBinaryPath+"/Release/libcef.so", cefBinaryPath+"/libcef_dll/libcef_dll_wrapper.a"
+                cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
+                linker.args "-lglog", "-ldouble-conversion", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
             }  
             build.finalizedBy copyCefResources
         }

@@ -48,7 +48,9 @@ Release/
 # Ignore gradle stuff
 .gradle/
 build/
+ceflib
+ceflib.tar.gz
 
 *.log
-cefsimple
-chrome-sandbox
+src/CMakeFiles
+cmake_install.cmake
