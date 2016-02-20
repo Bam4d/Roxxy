@@ -2,6 +2,8 @@
 
 Roxxy is a rendering proxy that uses Chromium Embedded Framework (CEF) as a headless browser.
 
+Currently building and tested on ubuntu 14.04 x64
+
 ## Why?
 
 Imagine you want to write a program that looks at websites and collect some information such as the images or a list of data points on teh page such as the prices... easy right? 
@@ -29,6 +31,8 @@ In theory on large servers, the browser pool could consist of several hundred br
 
 .. coming soon i need to write a script... :(
 
+
+Download and install git
 Download and install proxygen
 Download the ceflibs.tar.gz that I need to put online somewhere
 Gradlew?
@@ -36,7 +40,7 @@ Gradlew?
 
 ## Usage
 
-1. start roxxy
+1. Start roxxy
 
 ```
 > ./roxxy
