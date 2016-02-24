@@ -29,14 +29,21 @@ In theory on large servers, the browser pool could consist of several hundred br
 
 ## Building
 
-.. coming soon i need to write a script... :(
+Roxxy uses gradle to build, but we first need to download some dependencies.
 
+Firstly download the dependencies by running:
 
-Download and install git
-Download and install proxygen
-Download the ceflibs.tar.gz that I need to put online somewhere
-Gradlew?
+```
+./deps.sh
+```
 
+You can now build using:
+
+```
+gradle build
+```
+
+The executables will be located in `build/exe/roxxy/debug` and `build/exe/roxxy/release` for debug and release versions
 
 ## Usage
 
@@ -46,7 +53,7 @@ Gradlew?
 > ./roxxy
 ```
 
-2. Send a url to roxxy using it's REST API
+2. Send a url to roxxy using it's REST GET API
 
 ```
 > curl localhost:8055?url=http://www.google.com
