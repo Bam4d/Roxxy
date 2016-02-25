@@ -1,6 +1,9 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
+/*
+ * CefBrowserHandler.cpp
+ *
+ *  Created on: 2 Feb 2016
+ *      Author: bam4d
+ */
 
 #include "include/base/cef_logging.h"
 #include <string>
@@ -15,7 +18,7 @@
 #include <proxygen/httpserver/HTTPServer.h>
 #include <proxygen/httpserver/RequestHandlerFactory.h>
 
-#include "roxxy_app.h"
+#include "RoxxyApp.h"
 #include "RenderProxyHandlerFactory.h"
 
 using folly::EventBase;
@@ -56,6 +59,8 @@ int main(int argc, char* argv[]) {
 	// CEF has initialized.
 	CefRefPtr<RoxxyApp> app(new RoxxyApp);
 
+	settings.no_sandbox = 1;
+	settings.windowless_rendering_enabled = 1;
 	// Start the server stuff here
 
 	std::vector<HTTPServer::IPConfig> IPs = {

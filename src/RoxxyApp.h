@@ -1,6 +1,9 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
+/*
+ * CefBrowserHandler.cpp
+ *
+ *  Created on: 2 Feb 2016
+ *      Author: bam4d
+ */
 
 #ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
 #define CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
@@ -8,7 +11,7 @@
 #include "include/cef_app.h"
 
 // Implement application-level callbacks for the browser process.
-class RoxxyApp: public CefApp, public CefBrowserProcessHandler {
+class RoxxyApp: public CefApp, CefBrowserProcessHandler {
 public:
 	RoxxyApp();
 	virtual ~RoxxyApp();

@@ -111,6 +111,7 @@ void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 	browserList_.push_back(browser);
 
 	setBrowserUrl(browser, "about:blank");
+	loadCounters_.insert(std::make_pair(0,0));
 	freeBrowserList_->blockingWrite(browser->GetIdentifier());
 }
 
@@ -173,7 +174,8 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 		LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
 
 		// we have been to the about:blank page and we have loaded our new page
-		if(canGoBack) {
+		if(canGoBack && loadCounters_[browser->GetMainFrame()->GetIdentifier()] == 0) {
+			//browser->GetMainFrame()->ExecuteJavaScript()
 			browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 		}
 	}
@@ -188,10 +190,29 @@ void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefSt
 }
 
 void CefBrowserHandler::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
+	loadCounters_[browser->GetMainFrame()->GetIdentifier()]++;
 	//frame->GetSource(new )
-	//LOG(INFO)<< "OnLoadStart test";
+	LOG(INFO)<< "OnLoadStart test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
 }
 
 void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
-	//LOG(INFO)<< "OnLoadEnd test";
+	loadCounters_[browser->GetMainFrame()->GetIdentifier()]--;
+	LOG(INFO)<< "OnLoadEnd test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
 }
+
+bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+	                                        CefProcessId source_process,
+	                                        CefRefPtr<CefProcessMessage> message) {
+
+	LOG(INFO) << "process message received!!";
+	CefRefPtr<CefListValue> args = message->GetArgumentList();
+	CefString processMessage = args->GetString(0);
+
+	if(processMessage == "loaded") {
+		LOG(INFO) << "Renderer reports completed rendering";
+		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
+	}
+
+	return true;
+}
+

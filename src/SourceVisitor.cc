@@ -17,7 +17,9 @@ SourceVisitor::~SourceVisitor() {
 	// TODO Auto-generated destructor stub
 }
 
-// Called asynchronously when the HTML contents are available.
+/**
+ * Called asynchronously when the HTML contents are available.
+ */
 void SourceVisitor::Visit(const CefString& string) {
 
 	LOG(INFO)<< "got page source";

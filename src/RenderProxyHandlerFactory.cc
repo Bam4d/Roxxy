@@ -17,7 +17,7 @@ RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port) {
 	LOG(INFO) << "ProxygenServer server starting....";
 
 	// Pool browsers here
-	browserPool_ = new BrowserPool(20);
+	browserPool_ = new BrowserPool(1);
 	browserPool_->Initialize();
 }
 

@@ -50,7 +50,7 @@ The executables will be located in `build/exe/roxxy/debug` and `build/exe/roxxy/
 1. Start roxxy
 
 ```
-> ./roxxy
+> ./roxxy --disable-setuid-sandbox
 ```
 
 2. Send a url to roxxy using it's REST GET API

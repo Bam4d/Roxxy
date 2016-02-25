@@ -70,6 +70,9 @@ private:
 	// Controller for the browser pool
 	BrowserPool* browserPool_;
 
+	//Load start and end counters for each browser
+	std::map<int, int> loadCounters_;
+
 	// Manage the browser resources
 	typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
 	BrowserList browserList_;
@@ -103,6 +106,11 @@ private:
 
 	virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
 			CefRefPtr<CefFrame> frame, int httpStatusCode) override;
+
+	// Process messages
+	virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+	                                        CefProcessId source_process,
+	                                        CefRefPtr<CefProcessMessage> message) override;
 
 
 	IMPLEMENT_REFCOUNTING(CefBrowserHandler)
