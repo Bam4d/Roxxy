@@ -175,8 +175,8 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack && loadCounters_[browser->GetMainFrame()->GetIdentifier()] == 0) {
-			//browser->GetMainFrame()->ExecuteJavaScript()
-			browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
+			browser->GetMainFrame()->ExecuteJavaScript("window.roxxy_loaded();", browser->GetMainFrame()->GetURL(),0);
+			//browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 		}
 	}
 }
@@ -201,18 +201,10 @@ void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFr
 }
 
 bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
-	                                        CefProcessId source_process,
-	                                        CefRefPtr<CefProcessMessage> message) {
+                                        CefProcessId source_process,
+                                        CefRefPtr<CefProcessMessage> message) {
+	LOG(INFO) << "message received from render thread";
 
-	LOG(INFO) << "process message received!!";
-	CefRefPtr<CefListValue> args = message->GetArgumentList();
-	CefString processMessage = args->GetString(0);
-
-	if(processMessage == "loaded") {
-		LOG(INFO) << "Renderer reports completed rendering";
-		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
-	}
-
+	browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 	return true;
 }
-
