@@ -99,6 +99,9 @@ void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefSt
 		return;
 	}
 
+	CefRefPtr<CefProcessMessage> msg= CefProcessMessage::Create("ping");
+	browser->SendProcessMessage(PID_RENDERER, msg);
+
 	LOG(INFO) << "Setting browser url: " << url.ToString();
 	browser->GetMainFrame()->LoadURL(url);
 
@@ -205,6 +208,11 @@ bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                         CefRefPtr<CefProcessMessage> message) {
 	LOG(INFO) << "message received from render thread";
 
-	browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
+	if(message->GetName() == "roxxy_loaded") {
+		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
+	} else if(message->GetName() == "pong") {
+		LOG(INFO)<<"Recieved pong";
+	}
+
 	return true;
 }

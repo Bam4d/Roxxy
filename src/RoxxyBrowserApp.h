@@ -11,31 +11,29 @@
 #include "include/cef_app.h"
 
 // Implement application-level callbacks for the browser process.
-class RoxxyApp: public CefApp, CefBrowserProcessHandler, CefRenderProcessHandler {
+class RoxxyBrowserApp: public CefApp, CefBrowserProcessHandler {
 public:
-	RoxxyApp();
-	virtual ~RoxxyApp();
+	RoxxyBrowserApp();
+	virtual ~RoxxyBrowserApp();
 
 	// CefApp methods:
 	virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
 		return this;
 	}
 
-	virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override {
-		return this;
-	}
-
-	virtual void OnContextCreated(CefRefPtr<CefBrowser> browser,
-	                                CefRefPtr<CefFrame> frame,
-	                                CefRefPtr<CefV8Context> context) override;
-
 	// CefBrowserProcessHandler methods:
 	virtual void OnContextInitialized() override;
+
+
+	virtual void OnRenderProcessThreadCreated(CefRefPtr<CefListValue> extra_info) override {
+		LOG(INFO) << "render process created";
+	}
+
 
 private:
 
 	// Include the default reference counting implementation.
-	IMPLEMENT_REFCOUNTING(RoxxyApp)
+	IMPLEMENT_REFCOUNTING(RoxxyBrowserApp)
 	
 };
 
