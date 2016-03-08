@@ -195,18 +195,18 @@ void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefSt
 void CefBrowserHandler::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
 	loadCounters_[browser->GetMainFrame()->GetIdentifier()]++;
 	//frame->GetSource(new )
-	LOG(INFO)<< "OnLoadStart test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
+	//LOG(INFO)<< "OnLoadStart test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
 }
 
 void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
 	loadCounters_[browser->GetMainFrame()->GetIdentifier()]--;
-	LOG(INFO)<< "OnLoadEnd test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
+	//LOG(INFO)<< "OnLoadEnd test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
 }
 
 bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                         CefProcessId source_process,
                                         CefRefPtr<CefProcessMessage> message) {
-	LOG(INFO) << "message received from render thread";
+	//LOG(INFO) << "message received from render thread";
 
 	if(message->GetName() == "roxxy_loaded") {
 		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));

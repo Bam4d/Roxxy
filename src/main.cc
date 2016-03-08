@@ -34,26 +34,30 @@ int main(int argc, char* argv[]) {
 	CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
 	command_line->InitFromArgv(argc, argv);
 
-	// CEF applications have multiple sub-processes (render, plugin, GPU, etc)
-	// that share the same executable. This function checks the command-line and,
-	// if this is a sub-process, executes the appropriate logic.
-	int exit_code = CefExecuteProcess(main_args, NULL, NULL);
-	if (exit_code >= 0) {
-		// The sub-process has completed so return here.
-		return exit_code;
-	}
-
 	CefSettings settings;
 	CefRefPtr<CefApp> app;
 	if(!command_line->HasSwitch("type")) {
+		LOG(INFO) << "browser process";
 		app = new RoxxyBrowserApp();
 	} else {
 		const std::string& process_type = command_line->GetSwitchValue("type");
 		if (process_type == "renderer" || process_type == "zygote") {
+			LOG(INFO) << process_type <<" process";
 			app = new RoxxyRenderApp();
 		} else {
+			LOG(INFO) << "other process";
 			app = new RoxxyOtherApp();
 		}
+	}
+
+	// CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+	// that share the same executable. This function checks the command-line and,
+	// if this is a sub-process, executes the appropriate logic.
+	int exit_code = CefExecuteProcess(main_args, app, NULL);
+	if (exit_code >= 0) {
+		LOG(INFO) << "processes exited";
+		// The sub-process has completed so return here.
+		return exit_code;
 	}
 
 	settings.no_sandbox = 1;
