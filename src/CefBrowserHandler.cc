@@ -85,7 +85,7 @@ CefRefPtr<CefBrowser> CefBrowserHandler::getBrowserById(int id) {
  *
  */
 void CefBrowserHandler::StartBrowserSession(int browserId, RenderProxyHandler* renderProxyHandler) {
-
+	LOG(INFO)<< "Starting browser " << browserId << "session";
 	setBrowserUrl(getBrowserById(browserId), renderProxyHandler->url);
 }
 
@@ -99,12 +99,8 @@ void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefSt
 		return;
 	}
 
-	CefRefPtr<CefProcessMessage> msg= CefProcessMessage::Create("ping");
-	browser->SendProcessMessage(PID_RENDERER, msg);
-
-	LOG(INFO) << "Setting browser url: " << url.ToString();
+	LOG(INFO) << "Setting browser " << browser->GetIdentifier() << " url: " << url.ToString();
 	browser->GetMainFrame()->LoadURL(url);
-
 }
 
 /**
@@ -114,27 +110,28 @@ void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 	browserList_.push_back(browser);
 
 	setBrowserUrl(browser, "about:blank");
-	loadCounters_.insert(std::make_pair(0,0));
+
+	// Send a ping just to say hi to the renderer process
+	CefRefPtr<CefProcessMessage> msg= CefProcessMessage::Create("ping");
+	browser->SendProcessMessage(PID_RENDERER, msg);
+
+	loadCounters_.insert(std::make_pair(browser->GetIdentifier(),0));
 	freeBrowserList_->blockingWrite(browser->GetIdentifier());
 }
 
 bool CefBrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 	CEF_REQUIRE_UI_THREAD();
-
 	LOG(WARNING) << "Closing browser";
-
 	return false;
 }
 
 void CefBrowserHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 	CEF_REQUIRE_UI_THREAD();
-
 	LOG(WARNING) << "Going to close";
 }
 
 void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) {
 	CEF_REQUIRE_UI_THREAD();
-	//DCHECK(renderProxyHandler_ != nullptr);
 	LOG(WARNING) << "LOAD ERROR";
 
 	// Don't display an error for downloaded files.
@@ -153,31 +150,23 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 }
 
 void CefBrowserHandler::EndBrowserSession(int browserId) {
-	setBrowserUrl(getBrowserById(browserId), "about:blank");
 	// Set the browser url once it is loaded to the "about-blank" state
+	setBrowserUrl(getBrowserById(browserId), "about:blank");
 	freeBrowserList_->blockingWrite(browserId);
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
-//	LOG(INFO) << "Loading state change";
-//	LOG(INFO) << "isLoading " << isLoading;
-//	LOG(INFO) << "canGoBack " << canGoBack;
-//	LOG(INFO) << "canGoForward " << canGoForward;
 	if(!isLoading) {
 
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
 
 		if(isAboutBlank) {
-
 			return;
 		}
 
-		// We load to about blank to zero the state of the browser
-		//LOG(INFO) << "BROWSER_ID " << browser->GetIdentifier();
-		LOG(INFO) << "current URL: " << browser->GetMainFrame()->GetURL().ToString();
-
 		// we have been to the about:blank page and we have loaded our new page
-		if(canGoBack && loadCounters_[browser->GetMainFrame()->GetIdentifier()] == 0) {
+		if(canGoBack && loadCounters_[browser->GetIdentifier()] == 0) {
+			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser" << browser->GetIdentifier();
 			browser->GetMainFrame()->ExecuteJavaScript("window.roxxy_loaded();", browser->GetMainFrame()->GetURL(),0);
 			//browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 		}
@@ -189,24 +178,20 @@ void CefBrowserHandler::OnSourceVisited(const CefString& string, int browserId) 
 }
 
 void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) {
-	//LOG(INFO)<< "Title has changed";
 }
 
 void CefBrowserHandler::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
-	loadCounters_[browser->GetMainFrame()->GetIdentifier()]++;
-	//frame->GetSource(new )
-	//LOG(INFO)<< "OnLoadStart test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
+	loadCounters_[browser->GetIdentifier()]++;
 }
 
 void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
-	loadCounters_[browser->GetMainFrame()->GetIdentifier()]--;
-	//LOG(INFO)<< "OnLoadEnd test " << loadCounters_[browser->GetMainFrame()->GetIdentifier()];
+
+	loadCounters_[browser->GetIdentifier()]--;
 }
 
 bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                         CefProcessId source_process,
                                         CefRefPtr<CefProcessMessage> message) {
-	//LOG(INFO) << "message received from render thread";
 
 	if(message->GetName() == "roxxy_loaded") {
 		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));

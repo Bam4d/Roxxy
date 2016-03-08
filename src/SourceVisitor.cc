@@ -22,6 +22,6 @@ SourceVisitor::~SourceVisitor() {
  */
 void SourceVisitor::Visit(const CefString& string) {
 
-	LOG(INFO)<< "got page source";
+	//LOG(INFO)<< "got page source";
 	browserHandler_->OnSourceVisited(string, browserId_);
 }

@@ -29,7 +29,6 @@ public:
 											CefRefPtr<CefProcessMessage> message) override;
 
 	virtual void OnRenderThreadCreated(CefRefPtr<CefListValue> extra_info) override {
-		LOG(INFO) << "render thread created";
 	}
 
 private:

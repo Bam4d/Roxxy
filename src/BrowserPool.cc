@@ -29,7 +29,6 @@ BrowserPool::~BrowserPool() {
 }
 
 void BrowserPool::Initialize() {
-
 	// Initialize the browser handler
 	browserHandler_ = new CefBrowserHandler(this);
 
@@ -61,6 +60,8 @@ void BrowserPool::ReleaseBrowserSync(RenderProxyHandler* renderProxyHandler) {
 
 	// Remove from the routing maps
 	int freeBrowserId = GetAssignedBrowserId(renderProxyHandler);
+	LOG(INFO)<< "Releasing browser" << freeBrowserId;
+
 	browserIdToHandler_.erase(freeBrowserId);
 	handlerToBrowserId_.erase(renderProxyHandler);
 

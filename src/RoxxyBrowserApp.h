@@ -26,7 +26,6 @@ public:
 
 
 	virtual void OnRenderProcessThreadCreated(CefRefPtr<CefListValue> extra_info) override {
-		LOG(INFO) << "render process created";
 	}
 
 

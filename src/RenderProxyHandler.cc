@@ -28,13 +28,13 @@ using folly::toJson;
 using namespace proxygen;
 
 RenderProxyHandler::RenderProxyHandler(BrowserPool* browserPool) {
-	LOG(INFO) << "ProxyHandler created.";
+	//LOG(INFO) << "ProxyHandler created.";
 
 	browserPool_ = browserPool;
 }
 
 RenderProxyHandler::~RenderProxyHandler() {
-	LOG(INFO) << "ProxyHandler being destroyed.";
+	//LOG(INFO) << "ProxyHandler being destroyed.";
 	// TODO Auto-generated destructor stub
 }
 
@@ -43,8 +43,6 @@ void RenderProxyHandler::onRequest(std::unique_ptr<HTTPMessage> request)
 
 	// Have to store the evb in this object so we can re-use the thread to send responses
 	evb = folly::EventBaseManager::get()->getExistingEventBase();
-
-	LOG(INFO)<< "Headers received.";
 
 	request_ = std::move(request);
 
@@ -62,9 +60,7 @@ void RenderProxyHandler::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {
 }
 
 void RenderProxyHandler::onEOM() noexcept {
-	LOG(INFO)<< "Body received.";
 	DCHECK(browserPool_ != nullptr);
-	// Create browser and then only give the response when we have rendered, probably want to send rendered html
 
 	try {
 
@@ -81,6 +77,7 @@ void RenderProxyHandler::onEOM() noexcept {
 		}
 
 	} catch(...) {
+		LOG(INFO) << "Request error";
 		ResponseBuilder(downstream_)
 			.status(400, "BAD_REQUEST")
 			.body("Cannot process request.")
@@ -95,7 +92,7 @@ void RenderProxyHandler::onUpgrade(UpgradeProtocol protocol) noexcept {
 
 void RenderProxyHandler::requestComplete() noexcept {
 	DCHECK(browserPool_ != nullptr);
-	LOG(INFO)<< "Request complete.";
+	LOG(INFO) << "Request complete.";
 	browserPool_->ReleaseBrowserSync(this);
 	delete this;
 }
@@ -110,12 +107,14 @@ void RenderProxyHandler::onError(ProxygenError err) noexcept {
 void RenderProxyHandler::SendResponse(std::string responseContent) {
 	DCHECK(evb != nullptr);
 
-	LOG(INFO) << "Sending response " << responseContent;
+	int browserId = browserPool_->GetAssignedBrowserId(this);
+	LOG(INFO) << "Sending response from " << browserId;
 
 	evb->runInEventBaseThread([&, responseContent] () {
 
 		std::string response = responseContent;
 
+		LOG(INFO) << "Sending response (in thread) from " << browserId;
 		ResponseBuilder(downstream_).status(200, "OK")
 				.body(response)
 				//.header("roxxy-url", url_)
