@@ -21,8 +21,8 @@
 
 #include "RenderProxyHandler.h"
 #include "BrowserPool.h"
+#include "RenderPageImage.h"
 #include "SourceVisitor.h"
-#include "RenderPNG.h"
 
 CefBrowserHandler::CefBrowserHandler(BrowserPool* browserPool) {
 	// TODO Auto-generated constructor stub
@@ -170,7 +170,7 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack && loadCounters_[browser->GetIdentifier()] == 0) {
 			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser: " << browser->GetIdentifier();
-			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; window.roxxy_loaded();}", browser->GetMainFrame()->GetURL(),0);
+			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; setTimeout(window.roxxy_loaded, 500);}", browser->GetMainFrame()->GetURL(),0);
 			//browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 		}
 	}
@@ -197,10 +197,19 @@ void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFr
  */
 void CefBrowserHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
 		const RectList& dirtyRects, const void* buffer, int width, int height) {
-	LOG(INFO) << "Paint event w: " << width << " h: " << height;
+	mem_encode pngBuffer;
 
+//	size_t nsize = pngBuffer->size + length;
+
+	/* allocate or grow buffer */
+//	if (pngBuffer->buffer)
+//		pngBuffer->buffer = (unsigned char*)realloc(p->buffer, nsize);
+//	else
+//		pngBuffer->buffer = (unsigned char*)malloc(nsize);
+
+	LOG(INFO)<<buffer;
 	// Do something with the buffer here, store it somewhere maybe
-	RenderPNG::Render(browser->GetMainFrame()->GetURL(), buffer, width, height);
+//	RenderPageImage::RenderPNG(buffer, pngBuffer, width, height);
 }
 
 
