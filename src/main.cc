@@ -8,6 +8,8 @@
 #include "include/base/cef_logging.h"
 #include <string>
 
+#include "folly/Conv.h"
+
 #include "include/cef_browser.h"
 #include "include/cef_command_line.h"
 #include "include/wrapper/cef_helpers.h"
@@ -19,9 +21,8 @@
 
 #include "Server.h"
 
+// Define the input flags
 DEFINE_int32(http_port, 8055, "Port to listen on with HTTP protocol");
-//DEFINE_int32(spdy_port, 11001, "Port to listen on with SPDY protocol");
-//DEFINE_int32(h2_port, 11002, "Port to listen on with HTTP/2 protocol");
 DEFINE_string(ip, "0.0.0.0", "IP/Hostname to bind to");
 DEFINE_int32(threads, 0, "Number of threads to listen on. Numbers <= 0 "
              "will use the number of cores on this machine.");
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 	// Only start this on the browser process
 	if(!command_line->HasSwitch("type")) {
-		Server* server = new Server(FLAGS_threads, FLAGS_http_port, FLAGS_ip);
+		Server* server = new Server(FLAGS_threads, FLAGS_http_port, FLAGS_ip, 1);
 		server->StartServer();
 	}
 

@@ -25,13 +25,12 @@ bool V8CallbackHandler::Execute(const CefString& name,
                        CefRefPtr<CefV8Value>& retval,
                        CefString& exception) {
 
-	//LOG(INFO) << "callback handler fired";
+
 	if(name == "roxxy_loaded") {
 		CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
-
-		LOG(INFO) << "roxxy page load script has run in browser " << context->GetBrowser()->GetIdentifier();
-
 		CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("roxxy_loaded");
+
+		LOG(INFO) << "roxxy_loaded() in browser" << context->GetBrowser()->GetIdentifier();
 
 		context->GetBrowser()->SendProcessMessage(PID_BROWSER, msg);
 		return true;

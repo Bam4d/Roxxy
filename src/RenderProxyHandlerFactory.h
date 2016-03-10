@@ -20,7 +20,7 @@ using namespace proxygen;
 
 class RenderProxyHandlerFactory : public RequestHandlerFactory {
  public:
-	RenderProxyHandlerFactory(int port);
+	RenderProxyHandlerFactory(int port, int numBrowsers);
 	virtual ~RenderProxyHandlerFactory();
 
 	// RequestHandlerFactory stuff

@@ -17,7 +17,7 @@ using namespace proxygen;
  */
 class Server {
 public:
-	Server(int threads, int port, std::string ip);
+	Server(int threads, int port, std::string ip, int numBrowsers);
 	virtual ~Server();
 
 	void StartServer();

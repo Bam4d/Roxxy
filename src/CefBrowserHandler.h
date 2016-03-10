@@ -33,14 +33,8 @@ public:
 	}
 
 	virtual bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-		rect = CefRect(0, 0, 0, 0);
+		rect = CefRect(0, 0, 1920, 1080);
 		return true;
-	}
-
-	virtual void OnPaint(CefRefPtr<CefBrowser>,
-			CefRenderHandler::PaintElementType, const RectList&, const void*,
-			int, int) {
-
 	}
 
 	// CefClient methods:
@@ -106,6 +100,13 @@ private:
 
 	virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
 			CefRefPtr<CefFrame> frame, int httpStatusCode) override;
+
+	// Paint
+	virtual void OnPaint(CefRefPtr<CefBrowser> browser,
+            PaintElementType type,
+            const RectList& dirtyRects,
+            const void* buffer,
+            int width, int height) override;
 
 	// Process messages
 	virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,

@@ -41,9 +41,12 @@ void BrowserPool::Initialize() {
 int BrowserPool::AssignBrowserSync(RenderProxyHandler* renderProxyHandler) {
 	DCHECK(renderProxyHandler != nullptr);
 
+	CefRefPtr<CefBrowser> freeBrowser = browserHandler_->PopFreeBrowser();
+
+	// We shouldn't block other browsers trying to write to the free browser list while we are waiting for a free browser.
+	// Therefore we start the mutex after we have popped the free browser
 	std::lock_guard<std::mutex> lock(browser_routing_mutex);
 
-	CefRefPtr<CefBrowser> freeBrowser = browserHandler_->PopFreeBrowser();
 	int browserId = freeBrowser->GetIdentifier();
 
 	// Then we assign it to the handler
@@ -60,7 +63,6 @@ void BrowserPool::ReleaseBrowserSync(RenderProxyHandler* renderProxyHandler) {
 
 	// Remove from the routing maps
 	int freeBrowserId = GetAssignedBrowserId(renderProxyHandler);
-	LOG(INFO)<< "Releasing browser" << freeBrowserId;
 
 	browserIdToHandler_.erase(freeBrowserId);
 	handlerToBrowserId_.erase(renderProxyHandler);

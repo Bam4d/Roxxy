@@ -7,6 +7,9 @@
 
 #include "CefBrowserHandler.h"
 
+// includes for rendering image
+#include <png.h>
+
 /**
  * Includes for CEF
  */
@@ -19,6 +22,7 @@
 #include "RenderProxyHandler.h"
 #include "BrowserPool.h"
 #include "SourceVisitor.h"
+#include "RenderPNG.h"
 
 CefBrowserHandler::CefBrowserHandler(BrowserPool* browserPool) {
 	// TODO Auto-generated constructor stub
@@ -46,9 +50,9 @@ void CefBrowserHandler::Initialize() {
 
 	// Specify CEF browser settings here.
 	CefBrowserSettings browser_settings;
-	browser_settings.windowless_frame_rate = 1;
-	browser_settings.application_cache = STATE_DISABLED;
-	browser_settings.image_loading = STATE_DISABLED;
+	//browser_settings.windowless_frame_rate = 1;
+	//browser_settings.application_cache = STATE_DISABLED;
+	//browser_settings.image_loading = STATE_DISABLED;
 
 	for(int i = 0; i<browserPool_->Size(); i++) {
 		LOG(INFO) << "Starting Browser: " << i;
@@ -85,7 +89,6 @@ CefRefPtr<CefBrowser> CefBrowserHandler::getBrowserById(int id) {
  *
  */
 void CefBrowserHandler::StartBrowserSession(int browserId, RenderProxyHandler* renderProxyHandler) {
-	LOG(INFO)<< "Starting browser " << browserId << "session";
 	setBrowserUrl(getBrowserById(browserId), renderProxyHandler->url);
 }
 
@@ -99,7 +102,6 @@ void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefSt
 		return;
 	}
 
-	LOG(INFO) << "Setting browser " << browser->GetIdentifier() << " url: " << url.ToString();
 	browser->GetMainFrame()->LoadURL(url);
 }
 
@@ -156,6 +158,7 @@ void CefBrowserHandler::EndBrowserSession(int browserId) {
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
+	LOG(INFO)<< "Browser: " << browser->GetIdentifier() << "Loading state changed:"<< loadCounters_[browser->GetIdentifier()] << ":" << isLoading << canGoBack << canGoForward;
 	if(!isLoading) {
 
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
@@ -166,8 +169,8 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack && loadCounters_[browser->GetIdentifier()] == 0) {
-			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser" << browser->GetIdentifier();
-			browser->GetMainFrame()->ExecuteJavaScript("window.roxxy_loaded();", browser->GetMainFrame()->GetURL(),0);
+			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser: " << browser->GetIdentifier();
+			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; window.roxxy_loaded();}", browser->GetMainFrame()->GetURL(),0);
 			//browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 		}
 	}
@@ -181,14 +184,31 @@ void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefSt
 }
 
 void CefBrowserHandler::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
-	loadCounters_[browser->GetIdentifier()]++;
+	//loadCounters_[browser->GetIdentifier()]++;
 }
 
 void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
-
-	loadCounters_[browser->GetIdentifier()]--;
+	//loadCounters_[browser->GetIdentifier()]--;
 }
 
+
+/**
+ * Handle paint, events, such as generating a PNG
+ */
+void CefBrowserHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
+		const RectList& dirtyRects, const void* buffer, int width, int height) {
+	LOG(INFO) << "Paint event w: " << width << " h: " << height;
+
+	// Do something with the buffer here, store it somewhere maybe
+	RenderPNG::Render(browser->GetMainFrame()->GetURL(), buffer, width, height);
+}
+
+
+
+
+/**
+ * Handle process messages
+ */
 bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                         CefProcessId source_process,
                                         CefRefPtr<CefProcessMessage> message) {
@@ -196,7 +216,7 @@ bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 	if(message->GetName() == "roxxy_loaded") {
 		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 	} else if(message->GetName() == "pong") {
-		LOG(INFO)<<"Recieved pong";
+		LOG(INFO)<< "Browser: " << browser->GetIdentifier() << " ready!";
 	}
 
 	return true;

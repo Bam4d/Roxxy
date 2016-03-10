@@ -12,12 +12,12 @@
 #include "BrowserPool.h"
 
 
-RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port) {
+RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port, int numBrowsers) {
 	port_ = port;
 	LOG(INFO) << "ProxygenServer server starting....";
 
 	// Pool browsers here
-	browserPool_ = new BrowserPool(20);
+	browserPool_ = new BrowserPool(numBrowsers);
 	browserPool_->Initialize();
 }
 

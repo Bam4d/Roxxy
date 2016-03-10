@@ -43,7 +43,7 @@ bool RoxxyRenderApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 	//LOG(INFO) << "Render process message recieved";
 
 	if(message->GetName() == "ping"){
-		LOG(INFO)<< "render: ping!";
+		LOG(INFO)<< "Render Process: IPC comms with browser: " << browser->GetIdentifier() << " established!";
 		CefRefPtr<CefProcessMessage> msg= CefProcessMessage::Create("pong");
 		browser->SendProcessMessage(PID_BROWSER, msg);
 	}

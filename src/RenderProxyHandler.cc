@@ -92,7 +92,7 @@ void RenderProxyHandler::onUpgrade(UpgradeProtocol protocol) noexcept {
 
 void RenderProxyHandler::requestComplete() noexcept {
 	DCHECK(browserPool_ != nullptr);
-	LOG(INFO) << "Request complete.";
+	LOG(INFO) << "Request complete: " << url << " ... Releasing browser: " << browserPool_->GetAssignedBrowserId(this);
 	browserPool_->ReleaseBrowserSync(this);
 	delete this;
 }
@@ -107,14 +107,10 @@ void RenderProxyHandler::onError(ProxygenError err) noexcept {
 void RenderProxyHandler::SendResponse(std::string responseContent) {
 	DCHECK(evb != nullptr);
 
-	int browserId = browserPool_->GetAssignedBrowserId(this);
-	LOG(INFO) << "Sending response from " << browserId;
-
 	evb->runInEventBaseThread([&, responseContent] () {
 
 		std::string response = responseContent;
 
-		LOG(INFO) << "Sending response (in thread) from " << browserId;
 		ResponseBuilder(downstream_).status(200, "OK")
 				.body(response)
 				//.header("roxxy-url", url_)
