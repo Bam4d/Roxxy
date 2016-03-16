@@ -50,13 +50,20 @@ The executables will be located in `build/exe/roxxy/debug` and `build/exe/roxxy/
 1. Start roxxy
 
 ```
-> ./roxxy --disable-setuid-sandbox
+> ./roxxy 
 ```
 
-2. Send a url to roxxy using it's REST GET API
+Send a url to roxxy using it's REST GET API
+### Getting rendered HTML
 
 ```
-> curl localhost:8055?url=http://www.google.com
+> curl localhost:8055/html?url=http://www.google.com
+```
+
+### Getting rendered page image PNG
+
+```
+> curl localhost:8055/png?url=http://www.google.com
 ```
 
 ## Commercially

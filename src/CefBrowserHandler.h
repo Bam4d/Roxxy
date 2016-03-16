@@ -12,10 +12,21 @@
 #include "folly/MPMCQueue.h"
 #include <list>
 
+#include "RenderPageImage.h"
+
 class BrowserPool;
 class RenderProxyHandler;
 
 using namespace folly;
+
+
+/**
+ * Structure containing state information for a browser.
+ */
+struct BrowserState {
+	bool isLoaded = false;
+	png_buffer pngBuffer;
+};
 
 
 class CefBrowserHandler : public CefClient,
@@ -57,7 +68,7 @@ public:
 
 	void Initialize();
 
-	void OnSourceVisited(const CefString& string, int browserId);
+	void OnPageLoadExecuted(const CefString& string, int browserId);
 
 private:
 
@@ -65,7 +76,7 @@ private:
 	BrowserPool* browserPool_;
 
 	//Load start and end counters for each browser
-	std::map<int, int> loadCounters_;
+	std::map<int, BrowserState> browserState_;
 
 	// Manage the browser resources
 	typedef std::list<CefRefPtr<CefBrowser>> BrowserList;

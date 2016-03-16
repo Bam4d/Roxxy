@@ -15,6 +15,11 @@
 // Forward declarations
 class BrowserPool;
 
+enum RequestType: uint8_t {
+	HTML,
+	PNG
+};
+
 class RenderProxyHandler: public proxygen::RequestHandler {
 public:
 	RenderProxyHandler(BrowserPool* browserHandler);
@@ -22,8 +27,12 @@ public:
 
 	void SendResponse(std::string response_data);
 
+	void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType);
+
 	// Local storage for the requested URL to load
 	std::string url;
+
+	RequestType requestType = HTML;
 
 private:
 

@@ -117,7 +117,7 @@ void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 	CefRefPtr<CefProcessMessage> msg= CefProcessMessage::Create("ping");
 	browser->SendProcessMessage(PID_RENDERER, msg);
 
-	loadCounters_.insert(std::make_pair(browser->GetIdentifier(),0));
+	browserState_.insert(std::make_pair(browser->GetIdentifier(),BrowserState()));
 	freeBrowserList_->blockingWrite(browser->GetIdentifier());
 }
 
@@ -155,10 +155,11 @@ void CefBrowserHandler::EndBrowserSession(int browserId) {
 	// Set the browser url once it is loaded to the "about-blank" state
 	setBrowserUrl(getBrowserById(browserId), "about:blank");
 	freeBrowserList_->blockingWrite(browserId);
+	browserState_[browserId].isLoaded = false;
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
-	LOG(INFO)<< "Browser: " << browser->GetIdentifier() << "Loading state changed:"<< loadCounters_[browser->GetIdentifier()] << ":" << isLoading << canGoBack << canGoForward;
+	LOG(INFO)<< "Browser: " << browser->GetIdentifier() << "Loading state changed:" << isLoading << canGoBack << canGoForward;
 	if(!isLoading) {
 
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
@@ -168,27 +169,38 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 		}
 
 		// we have been to the about:blank page and we have loaded our new page
-		if(canGoBack && loadCounters_[browser->GetIdentifier()] == 0) {
+		if(canGoBack) {
+			browserState_[browser->GetIdentifier()].isLoaded = true;
+
 			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser: " << browser->GetIdentifier();
 			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; setTimeout(window.roxxy_loaded, 500);}", browser->GetMainFrame()->GetURL(),0);
-			//browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
 		}
 	}
 }
 
-void CefBrowserHandler::OnSourceVisited(const CefString& string, int browserId) {
-	browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse(string);
+void CefBrowserHandler::OnPageLoadExecuted(const CefString& string, int browserId) {
+
+	switch(browserPool_->GetAssignedRenderProxyHandler(browserId)->requestType) {
+		case HTML:
+			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse(string);
+			break;
+		case PNG:
+			png_buffer* pngBuffer = &browserState_[browserId].pngBuffer;
+
+			LOG(INFO)<<"pngBuffer"<<pngBuffer;
+
+			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendImageResponse(pngBuffer->buffer, pngBuffer->size, "image/png");
+			break;
+	}
 }
 
 void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) {
 }
 
 void CefBrowserHandler::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
-	//loadCounters_[browser->GetIdentifier()]++;
 }
 
 void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
-	//loadCounters_[browser->GetIdentifier()]--;
 }
 
 
@@ -197,19 +209,15 @@ void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFr
  */
 void CefBrowserHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
 		const RectList& dirtyRects, const void* buffer, int width, int height) {
-	mem_encode pngBuffer;
 
-//	size_t nsize = pngBuffer->size + length;
+	bool isLoaded = browserState_[browser->GetIdentifier()].isLoaded;
 
-	/* allocate or grow buffer */
-//	if (pngBuffer->buffer)
-//		pngBuffer->buffer = (unsigned char*)realloc(p->buffer, nsize);
-//	else
-//		pngBuffer->buffer = (unsigned char*)malloc(nsize);
+	if(isLoaded) {
+		png_buffer* pngBuffer = &browserState_[browser->GetIdentifier()].pngBuffer;
 
-	LOG(INFO)<<buffer;
-	// Do something with the buffer here, store it somewhere maybe
-//	RenderPageImage::RenderPNG(buffer, pngBuffer, width, height);
+		// Renders the page image as a png into our browser state png buffer
+		RenderPageImage::RenderPNG(buffer, pngBuffer, width, height);
+	}
 }
 
 

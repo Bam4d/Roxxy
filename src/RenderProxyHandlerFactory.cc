@@ -37,7 +37,6 @@ void RenderProxyHandlerFactory::onServerStop() noexcept {
 }
 
 RequestHandler* RenderProxyHandlerFactory::onRequest(RequestHandler* handler, HTTPMessage* message) noexcept {
-	//LOG(INFO) << "request received, need to do something with this request now";
 
 	// The proxy handler and the browser handler are killed automatically, so we don't need to keep references here
 	return new RenderProxyHandler(browserPool_);

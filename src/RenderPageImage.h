@@ -11,9 +11,9 @@
 #include <string>
 
 /* structure to store PNG image bytes */
-struct mem_encode
+struct png_buffer
 {
-  unsigned char *buffer = nullptr;
+  void *buffer = nullptr;
   size_t size = 0;
 };
 
@@ -22,7 +22,7 @@ public:
 	RenderPageImage();
 	virtual ~RenderPageImage();
 
-	static void RenderPNG(const void* bgraBuffer, mem_encode& pngBuffer, int width, int height);
+	static void RenderPNG(const void* bgraBuffer, png_buffer* pngBuffer, size_t width, size_t height);
 };
 
 #endif /* SRC_RENDERPAGEIMAGE_H_ */

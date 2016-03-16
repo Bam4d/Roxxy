@@ -13,6 +13,7 @@
 
 #include <folly/json.h>
 #include <folly/io/async/EventBaseManager.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 using folly::dynamic;
 using folly::parseJson;
@@ -65,16 +66,36 @@ void RenderProxyHandler::onEOM() noexcept {
 	try {
 
 		std::string getUrl = request_->getDecodedQueryParam("url");
+		std::string path = request_->getPath();
 
-		if(!getUrl.empty()){
+		if(path == "/png") {
+			LOG(INFO) << "PNG image requested";
+			requestType = PNG;
+		} else if(path == "/html") {
+			requestType = HTML;
+			LOG(INFO) << "HTML page requested";
+		} else {
+			ResponseBuilder(downstream_)
+				.status(404, "NOT_FOUND")
+				.body("Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A")
+				.sendWithEOM();
+			return;
+		}
+
+		LOG(INFO)<<!boost::starts_with(getUrl, "about:");
+		LOG(INFO)<<!boost::starts_with(getUrl, "chrome://");
+
+		if(!getUrl.empty() && !boost::starts_with(getUrl, "about:") && !boost::starts_with(getUrl, "chrome://")){
 			this->url = getUrl;
 			browserPool_->StartBrowserSession(this);
 		} else {
 			ResponseBuilder(downstream_)
 				.status(400, "BAD_REQUEST")
-				.body("Url get parameter must be set, for example http://roxxyserver?url=http%3A%2F%2Fwww.google.com%0A")
+				.body("Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A")
 				.sendWithEOM();
 		}
+
+
 
 	} catch(...) {
 		LOG(INFO) << "Request error";
@@ -104,8 +125,25 @@ void RenderProxyHandler::onError(ProxygenError err) noexcept {
 	delete this;
 }
 
+void RenderProxyHandler::SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) {
+	DCHECK(evb != nullptr);
+
+	evb->runInEventBaseThread([&, buffer, contentType, contentLength] () {
+		std::unique_ptr<folly::IOBuf> imageBody = std::unique_ptr<folly::IOBuf>(new folly::IOBuf(folly::IOBuf::COPY_BUFFER, (const void*) buffer, contentLength));
+
+		ResponseBuilder(downstream_).status(200, "OK")
+				.body(std::move(imageBody))
+				//.body("test")
+				.header(HTTP_HEADER_CONTENT_TYPE, contentType)
+				.header(HTTP_HEADER_CONTENT_LENGTH, folly::to<std::string>(contentLength))
+				.sendWithEOM();
+	});
+}
+
 void RenderProxyHandler::SendResponse(std::string responseContent) {
 	DCHECK(evb != nullptr);
+
+	LOG(INFO)<<"Sending html response";
 
 	evb->runInEventBaseThread([&, responseContent] () {
 
