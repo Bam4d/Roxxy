@@ -82,9 +82,6 @@ void RenderProxyHandler::onEOM() noexcept {
 			return;
 		}
 
-		LOG(INFO)<<!boost::starts_with(getUrl, "about:");
-		LOG(INFO)<<!boost::starts_with(getUrl, "chrome://");
-
 		if(!getUrl.empty() && !boost::starts_with(getUrl, "about:") && !boost::starts_with(getUrl, "chrome://")){
 			this->url = getUrl;
 			browserPool_->StartBrowserSession(this);
@@ -133,7 +130,6 @@ void RenderProxyHandler::SendImageResponse(const void* buffer, size_t contentLen
 
 		ResponseBuilder(downstream_).status(200, "OK")
 				.body(std::move(imageBody))
-				//.body("test")
 				.header(HTTP_HEADER_CONTENT_TYPE, contentType)
 				.header(HTTP_HEADER_CONTENT_LENGTH, folly::to<std::string>(contentLength))
 				.sendWithEOM();

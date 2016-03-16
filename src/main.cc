@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 	// Only start this on the browser process
 	if(!command_line->HasSwitch("type")) {
-		Server* server = new Server(FLAGS_threads, FLAGS_http_port, FLAGS_ip, 1);
+		Server* server = new Server(FLAGS_threads, FLAGS_http_port, FLAGS_ip, 10);
 		server->StartServer();
 	}
 
