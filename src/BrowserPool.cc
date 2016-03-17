@@ -4,15 +4,15 @@
  *  Created on: 6 Feb 2016
  *      Author: bam4d
  */
+#include "BrowserPool.h"
 
 #include "include/cef_browser.h"
 
 /**
  * Local includes
  */
-#include "BrowserPool.h"
-#include "RenderProxyHandler.h"
 #include "CefBrowserHandler.h"
+#include "RenderProxyHandlerImpl.h"
 
 
 
@@ -97,7 +97,7 @@ void BrowserPool::StartBrowserSession(RenderProxyHandler* renderProxyHandler) {
 	DCHECK(renderProxyHandler != nullptr);
 
 	// Find the browser we have assigned to this request and then start the session based on the url
-	browserHandler_->StartBrowserSession(getBrowserById(GetAssignedBrowserId(renderProxyHandler)), renderProxyHandler);
+	browserHandler_->StartBrowserSession(getBrowserById(GetAssignedBrowserId(renderProxyHandler)), renderProxyHandler->GetRequestedUrl());
 }
 
 // Get the render proxy handler for a specific browser

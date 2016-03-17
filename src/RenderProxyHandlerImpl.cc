@@ -5,7 +5,7 @@
  *      Author: bam4d
  */
 
-#include "RenderProxyHandler.h"
+#include "RenderProxyHandlerImpl.h"
 
 #include <proxygen/httpserver/RequestHandler.h>
 #include <proxygen/httpserver/ResponseBuilder.h>
@@ -28,18 +28,18 @@ using folly::toJson;
 
 using namespace proxygen;
 
-RenderProxyHandler::RenderProxyHandler(BrowserPool* browserPool) {
+RenderProxyHandlerImpl::RenderProxyHandlerImpl(BrowserPool* browserPool) {
 	//LOG(INFO) << "ProxyHandler created.";
 
 	browserPool_ = browserPool;
 }
 
-RenderProxyHandler::~RenderProxyHandler() {
+RenderProxyHandlerImpl::~RenderProxyHandlerImpl() {
 	//LOG(INFO) << "ProxyHandler being destroyed.";
 	// TODO Auto-generated destructor stub
 }
 
-void RenderProxyHandler::onRequest(std::unique_ptr<HTTPMessage> request)
+void RenderProxyHandlerImpl::onRequest(std::unique_ptr<HTTPMessage> request)
 		noexcept {
 
 	// Have to store the evb in this object so we can re-use the thread to send responses
@@ -51,7 +51,7 @@ void RenderProxyHandler::onRequest(std::unique_ptr<HTTPMessage> request)
 
 }
 
-void RenderProxyHandler::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {
+void RenderProxyHandlerImpl::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {
 	if (requestBody_) {
 		requestBody_->prependChain(std::move(body));
 	} else {
@@ -60,7 +60,7 @@ void RenderProxyHandler::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {
 
 }
 
-void RenderProxyHandler::onEOM() noexcept {
+void RenderProxyHandlerImpl::onEOM() noexcept {
 	DCHECK(browserPool_ != nullptr);
 
 	try {
@@ -104,25 +104,25 @@ void RenderProxyHandler::onEOM() noexcept {
 
 }
 
-void RenderProxyHandler::onUpgrade(UpgradeProtocol protocol) noexcept {
+void RenderProxyHandlerImpl::onUpgrade(UpgradeProtocol protocol) noexcept {
 	// handler doesn't support upgrades
 }
 
-void RenderProxyHandler::requestComplete() noexcept {
+void RenderProxyHandlerImpl::requestComplete() noexcept {
 	DCHECK(browserPool_ != nullptr);
 	LOG(INFO) << "Request complete: " << url << " ... Releasing browser: " << browserPool_->GetAssignedBrowserId(this);
 	browserPool_->ReleaseBrowserSync(this);
 	delete this;
 }
 
-void RenderProxyHandler::onError(ProxygenError err) noexcept {
+void RenderProxyHandlerImpl::onError(ProxygenError err) noexcept {
 	DCHECK(browserPool_ != nullptr);
 	LOG(WARNING) << "Request error";
 	browserPool_->ReleaseBrowserSync(this);
 	delete this;
 }
 
-void RenderProxyHandler::SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) {
+void RenderProxyHandlerImpl::SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) {
 	DCHECK(evb != nullptr);
 
 	evb->runInEventBaseThread([&, buffer, contentType, contentLength] () {
@@ -136,7 +136,7 @@ void RenderProxyHandler::SendImageResponse(const void* buffer, size_t contentLen
 	});
 }
 
-void RenderProxyHandler::SendResponse(std::string responseContent) {
+void RenderProxyHandlerImpl::SendResponse(std::string responseContent) {
 	DCHECK(evb != nullptr);
 
 	LOG(INFO)<<"Sending html response";

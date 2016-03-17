@@ -5,9 +5,8 @@
  *      Author: bam4d
  */
 
-#include "CefBrowserHandler.h"
+#include "CefBrowserHandlerImpl.h"
 
-// includes for rendering image
 #include <png.h>
 
 /**
@@ -19,19 +18,19 @@
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
 
-#include "RenderProxyHandler.h"
 #include "BrowserPool.h"
+#include "RenderProxyHandler.h"
 #include "RenderPageImage.h"
 #include "SourceVisitor.h"
 
-CefBrowserHandler::CefBrowserHandler() {
+CefBrowserHandlerImpl::CefBrowserHandlerImpl() {
 }
 
-CefBrowserHandler::~CefBrowserHandler() {
+CefBrowserHandlerImpl::~CefBrowserHandlerImpl() {
 	LOG(INFO) << "killing browser handler";
 }
 
-void CefBrowserHandler::Initialize(BrowserPool* browserPool) {
+void CefBrowserHandlerImpl::Initialize(BrowserPool* browserPool) {
 
 	browserPool_ = browserPool;
 
@@ -57,17 +56,17 @@ void CefBrowserHandler::Initialize(BrowserPool* browserPool) {
 /**
  *
  */
-void CefBrowserHandler::StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler) {
-	setBrowserUrl(browser, renderProxyHandler->url);
+void CefBrowserHandlerImpl::StartBrowserSession(CefRefPtr<CefBrowser> browser, std::string url) {
+	setBrowserUrl(browser, url);
 }
 
-void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url) {
+void CefBrowserHandlerImpl::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url) {
 	DCHECK(browser != nullptr);
 
 	if (!CefCurrentlyOn(TID_UI)) {
 		// Execute on the UI thread.
 		CefPostTask(TID_UI,
-				base::Bind(&CefBrowserHandler::setBrowserUrl, this, browser, url));
+				base::Bind(&CefBrowserHandlerImpl::setBrowserUrl, this, browser, url));
 		return;
 	}
 
@@ -77,7 +76,7 @@ void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefSt
 /**
  * Handler methods for the browser
  */
-void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
+void CefBrowserHandlerImpl::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 	LOG(INFO)<<"Created browser, registering";
 	browserPool_->RegisterBrowser(browser);
 
@@ -89,18 +88,18 @@ void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 
 }
 
-bool CefBrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
+bool CefBrowserHandlerImpl::DoClose(CefRefPtr<CefBrowser> browser) {
 	CEF_REQUIRE_UI_THREAD();
 	LOG(WARNING) << "Closing browser";
 	return false;
 }
 
-void CefBrowserHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
+void CefBrowserHandlerImpl::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 	CEF_REQUIRE_UI_THREAD();
 	LOG(WARNING) << "Going to close";
 }
 
-void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) {
+void CefBrowserHandlerImpl::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl) {
 	CEF_REQUIRE_UI_THREAD();
 	LOG(WARNING) << "LOAD ERROR";
 
@@ -122,13 +121,13 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 /**
  * End the session with the browser.
  */
-void CefBrowserHandler::ResetBrowser(CefRefPtr<CefBrowser> browser) {
+void CefBrowserHandlerImpl::ResetBrowser(CefRefPtr<CefBrowser> browser) {
 	// Set the browser url once it is loaded to the "about-blank" state
 	setBrowserUrl(browser, "about:blank");
 
 }
 
-void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
+void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
 	LOG(INFO)<< "Browser: " << browser->GetIdentifier() << "Loading state changed:" << isLoading << canGoBack << canGoForward;
 	if(!isLoading) {
 
@@ -148,10 +147,10 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 	}
 }
 
-void CefBrowserHandler::OnPageLoadExecuted(const CefString& string, int browserId) {
+void CefBrowserHandlerImpl::OnPageLoadExecuted(const CefString& string, int browserId) {
 	DCHECK(browserPool_ != nullptr);
 
-	switch(browserPool_->GetAssignedRenderProxyHandler(browserId)->requestType) {
+	switch(browserPool_->GetAssignedRenderProxyHandler(browserId)->GetRequestType()) {
 		case HTML:
 			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse(string);
 			break;
@@ -165,20 +164,17 @@ void CefBrowserHandler::OnPageLoadExecuted(const CefString& string, int browserI
 	}
 }
 
-void CefBrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) {
+void CefBrowserHandlerImpl::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
 }
 
-void CefBrowserHandler::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
-}
-
-void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
+void CefBrowserHandlerImpl::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
 }
 
 
 /**
  * Handle paint, events, such as generating a PNG
  */
-void CefBrowserHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
+void CefBrowserHandlerImpl::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
 		const RectList& dirtyRects, const void* buffer, int width, int height) {
 
 	bool isLoaded = browserPool_->GetBrowserStateById(browser->GetIdentifier())->isLoaded;
@@ -197,12 +193,12 @@ void CefBrowserHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType 
 /**
  * Handle process messages
  */
-bool CefBrowserHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+bool CefBrowserHandlerImpl::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                         CefProcessId source_process,
                                         CefRefPtr<CefProcessMessage> message) {
 
 	if(message->GetName() == "roxxy_loaded") {
-		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor(this, browser->GetIdentifier())));
+		browser->GetMainFrame()->GetSource(CefRefPtr<SourceVisitor>(new SourceVisitor((CefBrowserHandler*)this, browser->GetIdentifier())));
 	} else if(message->GetName() == "pong") {
 		LOG(INFO)<< "Browser: " << browser->GetIdentifier() << " ready!";
 	}

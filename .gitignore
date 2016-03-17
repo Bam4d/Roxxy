@@ -55,3 +55,4 @@ ceflib.tar.gz
 src/CMakeFiles
 cmake_install.cmake
 /Default
+/Test/

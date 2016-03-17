@@ -8,16 +8,17 @@
 #include "RenderProxyHandlerFactory.h"
 #include "include/base/cef_logging.h"
 
-#include "RenderProxyHandler.h"
 #include "BrowserPool.h"
 #include "CefBrowserHandler.h"
+#include "CefBrowserHandlerImpl.h"
+#include "RenderProxyHandlerImpl.h"
 
 
 RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port, int numBrowsers) {
 	port_ = port;
 	LOG(INFO) << "ProxygenServer server starting....";
 
-	cefBrowserHandler_ = new CefBrowserHandler();
+	cefBrowserHandler_ = new CefBrowserHandlerImpl();
 
 	// Pool browsers here
 	browserPool_ = new BrowserPool(cefBrowserHandler_, numBrowsers);
@@ -42,7 +43,7 @@ void RenderProxyHandlerFactory::onServerStop() noexcept {
 RequestHandler* RenderProxyHandlerFactory::onRequest(RequestHandler* handler, HTTPMessage* message) noexcept {
 
 	// The proxy handler and the browser handler are killed automatically, so we don't need to keep references here
-	return new RenderProxyHandler(browserPool_);
+	return new RenderProxyHandlerImpl(browserPool_);
 }
 
 

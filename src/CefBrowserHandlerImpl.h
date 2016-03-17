@@ -5,23 +5,23 @@
  *      Author: bam4d
  */
 
-#ifndef CEFBROWSERHANDLER_H_
-#define CEFBROWSERHANDLER_H_
+#ifndef CEFBROWSERHANDLERIMPL_H_
+#define CEFBROWSERHANDLERIMPL_H_
 
 #include "include/cef_client.h"
 #include <list>
 #include <mutex>
-class BrowserPool;
-class RenderProxyHandler;
 
-class CefBrowserHandler : public CefClient,
-		public CefDisplayHandler,
-		public CefLifeSpanHandler,
-		public CefLoadHandler,
-		public CefRenderHandler {
+#include "CefBrowserHandler.h"
+
+class BrowserPool;
+
+
+class CefBrowserHandlerImpl : public CefBrowserHandler {
+
 public:
-	CefBrowserHandler();
-	virtual ~CefBrowserHandler();
+	CefBrowserHandlerImpl();
+	virtual ~CefBrowserHandlerImpl();
 
 	// CefRenderHandler methods:
 	virtual CefRefPtr<CefRenderHandler> GetRenderHandler() {
@@ -37,16 +37,18 @@ public:
 	virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() override {
 		return this;
 	}
+
 	virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override {
 		return this;
 	}
+
 	virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override {
 		return this;
 	}
 
 	void ResetBrowser(CefRefPtr<CefBrowser> browser);
 
-	void StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler);
+	void StartBrowserSession(CefRefPtr<CefBrowser> browser, std::string url);
 
 	void Initialize(BrowserPool* browserPool);
 
@@ -57,10 +59,7 @@ private:
 	// Controller for the browser pool
 	BrowserPool* browserPool_;
 
-	void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
-
-	// CefDisplayHandler methods:
-	void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) override;
+	virtual void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
 
 	// CefLifeSpanHandler methods:
 	virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
@@ -95,8 +94,8 @@ private:
 	                                        CefProcessId source_process,
 	                                        CefRefPtr<CefProcessMessage> message) override;
 
-	IMPLEMENT_REFCOUNTING(CefBrowserHandler)
+	IMPLEMENT_REFCOUNTING(CefBrowserHandlerImpl)
 
 };
 
-#endif /* CEFBROWSERHANDLER_H_ */
+#endif /* CEFBROWSERHANDLERIMPL_H_ */

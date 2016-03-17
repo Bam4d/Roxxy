@@ -6,6 +6,7 @@
  */
 
 #include "SourceVisitor.h"
+
 #include "CefBrowserHandler.h"
 
 SourceVisitor::SourceVisitor(CefBrowserHandler* browserHandler, int browserId) {

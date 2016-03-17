@@ -9,25 +9,31 @@
 #define RENDERPROXYHANDLER_H_
 
 #include <folly/Memory.h>
-#include <proxygen/httpserver/RequestHandler.h>
 #include <proxygen/lib/http/HTTPMessage.h>
 
 // Forward declarations
 class BrowserPool;
 
-enum RequestType: uint8_t {
-	HTML,
-	PNG
-};
+#include "RenderProxyHandler.h"
 
-class RenderProxyHandler: public proxygen::RequestHandler {
+
+
+class RenderProxyHandlerImpl: public RenderProxyHandler {
 public:
-	RenderProxyHandler(BrowserPool* browserHandler);
-	virtual ~RenderProxyHandler();
+	RenderProxyHandlerImpl(BrowserPool* browserHandler);
+	virtual ~RenderProxyHandlerImpl();
 
-	void SendResponse(std::string response_data);
+	void SendResponse(std::string response_data) override;
 
-	void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType);
+	void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) override;
+
+	const std::string GetRequestedUrl() override {
+		return url;
+	}
+
+	const RequestType GetRequestType() override {
+		return requestType;
+	}
 
 	// Local storage for the requested URL to load
 	std::string url;

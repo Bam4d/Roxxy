@@ -32,8 +32,8 @@ class RenderProxyHandlerFactory : public RequestHandlerFactory {
 
 	private:
 		// Port number that the server will listen on
-		int port_ = 80;
 		CefRefPtr<CefBrowserHandler> cefBrowserHandler_;
+		int port_ = 80;
 		BrowserPool* browserPool_;
 };
 
