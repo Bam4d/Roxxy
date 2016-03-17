@@ -24,24 +24,17 @@
 #include "RenderPageImage.h"
 #include "SourceVisitor.h"
 
-CefBrowserHandler::CefBrowserHandler(BrowserPool* browserPool) {
-	// TODO Auto-generated constructor stub
-	LOG(INFO) << "starting browser handler";
-
-	browserPool_ = browserPool;
-
-	freeBrowserList_ = new MPMCQueue<int>(browserPool->Size());
-
+CefBrowserHandler::CefBrowserHandler() {
 }
 
 CefBrowserHandler::~CefBrowserHandler() {
-	// TODO Auto-generated destructor stub
 	LOG(INFO) << "killing browser handler";
-
-	delete freeBrowserList_;
 }
 
-void CefBrowserHandler::Initialize() {
+void CefBrowserHandler::Initialize(BrowserPool* browserPool) {
+
+	browserPool_ = browserPool;
+
 	LOG(INFO) << "Starting browsers.";
 
 	// Information used when creating the native window.
@@ -62,34 +55,10 @@ void CefBrowserHandler::Initialize() {
 }
 
 /**
- * Grab a free browser from the free browser list
- */
-CefRefPtr<CefBrowser> CefBrowserHandler::PopFreeBrowser() {
-	int browserId;
-
-	freeBrowserList_->blockingRead(browserId);
-
-	return getBrowserById(browserId);
-}
-
-
-/**
- * Get the browser based on it's unique Id
- */
-CefRefPtr<CefBrowser> CefBrowserHandler::getBrowserById(int id) {
-	for(auto browser : browserList_) {
-		if(browser->GetIdentifier() == id) {
-			return browser;
-		}
-	}
-	return nullptr;
-}
-
-/**
  *
  */
-void CefBrowserHandler::StartBrowserSession(int browserId, RenderProxyHandler* renderProxyHandler) {
-	setBrowserUrl(getBrowserById(browserId), renderProxyHandler->url);
+void CefBrowserHandler::StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler) {
+	setBrowserUrl(browser, renderProxyHandler->url);
 }
 
 void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url) {
@@ -109,7 +78,8 @@ void CefBrowserHandler::setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefSt
  * Handler methods for the browser
  */
 void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
-	browserList_.push_back(browser);
+	LOG(INFO)<<"Created browser, registering";
+	browserPool_->RegisterBrowser(browser);
 
 	setBrowserUrl(browser, "about:blank");
 
@@ -117,8 +87,6 @@ void CefBrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 	CefRefPtr<CefProcessMessage> msg= CefProcessMessage::Create("ping");
 	browser->SendProcessMessage(PID_RENDERER, msg);
 
-	browserState_.insert(std::make_pair(browser->GetIdentifier(),BrowserState()));
-	freeBrowserList_->blockingWrite(browser->GetIdentifier());
 }
 
 bool CefBrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -151,11 +119,13 @@ void CefBrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<Cef
 	//renderProxyHandler_->SendResponse(ss.str());
 }
 
-void CefBrowserHandler::EndBrowserSession(int browserId) {
+/**
+ * End the session with the browser.
+ */
+void CefBrowserHandler::ResetBrowser(CefRefPtr<CefBrowser> browser) {
 	// Set the browser url once it is loaded to the "about-blank" state
-	setBrowserUrl(getBrowserById(browserId), "about:blank");
-	freeBrowserList_->blockingWrite(browserId);
-	browserState_[browserId].isLoaded = false;
+	setBrowserUrl(browser, "about:blank");
+
 }
 
 void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
@@ -170,7 +140,7 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack) {
-			browserState_[browser->GetIdentifier()].isLoaded = true;
+			browserPool_->GetBrowserStateById(browser->GetIdentifier())->isLoaded = true;
 
 			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser: " << browser->GetIdentifier();
 			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; setTimeout(window.roxxy_loaded, 500);}", browser->GetMainFrame()->GetURL(),0);
@@ -179,13 +149,14 @@ void CefBrowserHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool
 }
 
 void CefBrowserHandler::OnPageLoadExecuted(const CefString& string, int browserId) {
+	DCHECK(browserPool_ != nullptr);
 
 	switch(browserPool_->GetAssignedRenderProxyHandler(browserId)->requestType) {
 		case HTML:
 			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse(string);
 			break;
 		case PNG:
-			png_buffer* pngBuffer = &browserState_[browserId].pngBuffer;
+			png_buffer* pngBuffer = &browserPool_->GetBrowserStateById(browserId)->pngBuffer;
 
 			LOG(INFO)<<"pngBuffer"<<pngBuffer;
 
@@ -210,10 +181,10 @@ void CefBrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFr
 void CefBrowserHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
 		const RectList& dirtyRects, const void* buffer, int width, int height) {
 
-	bool isLoaded = browserState_[browser->GetIdentifier()].isLoaded;
+	bool isLoaded = browserPool_->GetBrowserStateById(browser->GetIdentifier())->isLoaded;
 
 	if(isLoaded) {
-		png_buffer* pngBuffer = &browserState_[browser->GetIdentifier()].pngBuffer;
+		png_buffer* pngBuffer = &browserPool_->GetBrowserStateById(browser->GetIdentifier())->pngBuffer;
 
 		// Renders the page image as a png into our browser state png buffer
 		RenderPageImage::RenderPNG(buffer, pngBuffer, width, height);

@@ -13,8 +13,10 @@
 #include <folly/io/async/EventBaseManager.h>
 #include <proxygen/httpserver/HTTPServer.h>
 #include <proxygen/httpserver/RequestHandlerFactory.h>
+#include "include/wrapper/cef_helpers.h"
 
 class BrowserPool;
+class CefBrowserHandler;
 
 using namespace proxygen;
 
@@ -31,7 +33,7 @@ class RenderProxyHandlerFactory : public RequestHandlerFactory {
 	private:
 		// Port number that the server will listen on
 		int port_ = 80;
-
+		CefRefPtr<CefBrowserHandler> cefBrowserHandler_;
 		BrowserPool* browserPool_;
 };
 

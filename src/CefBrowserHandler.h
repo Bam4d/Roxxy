@@ -9,25 +9,10 @@
 #define CEFBROWSERHANDLER_H_
 
 #include "include/cef_client.h"
-#include "folly/MPMCQueue.h"
 #include <list>
-
-#include "RenderPageImage.h"
-
+#include <mutex>
 class BrowserPool;
 class RenderProxyHandler;
-
-using namespace folly;
-
-
-/**
- * Structure containing state information for a browser.
- */
-struct BrowserState {
-	bool isLoaded = false;
-	png_buffer pngBuffer;
-};
-
 
 class CefBrowserHandler : public CefClient,
 		public CefDisplayHandler,
@@ -35,7 +20,7 @@ class CefBrowserHandler : public CefClient,
 		public CefLoadHandler,
 		public CefRenderHandler {
 public:
-	CefBrowserHandler(BrowserPool* browserPool);
+	CefBrowserHandler();
 	virtual ~CefBrowserHandler();
 
 	// CefRenderHandler methods:
@@ -59,14 +44,11 @@ public:
 		return this;
 	}
 
-	CefRefPtr<CefBrowser> PopFreeBrowser();
+	void ResetBrowser(CefRefPtr<CefBrowser> browser);
 
-	// End the session with the browser.
-	void EndBrowserSession(int browserId);
+	void StartBrowserSession(CefRefPtr<CefBrowser> browser, RenderProxyHandler* renderProxyHandler);
 
-	void StartBrowserSession(int browserId, RenderProxyHandler* renderProxyHandler);
-
-	void Initialize();
+	void Initialize(BrowserPool* browserPool);
 
 	void OnPageLoadExecuted(const CefString& string, int browserId);
 
@@ -74,17 +56,6 @@ private:
 
 	// Controller for the browser pool
 	BrowserPool* browserPool_;
-
-	//Load start and end counters for each browser
-	std::map<int, BrowserState> browserState_;
-
-	// Manage the browser resources
-	typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
-	BrowserList browserList_;
-
-	CefRefPtr<CefBrowser> getBrowserById(int id);
-
-	MPMCQueue<int>* freeBrowserList_;
 
 	void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
 
@@ -123,7 +94,6 @@ private:
 	virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 	                                        CefProcessId source_process,
 	                                        CefRefPtr<CefProcessMessage> message) override;
-
 
 	IMPLEMENT_REFCOUNTING(CefBrowserHandler)
 

@@ -10,14 +10,17 @@
 
 #include "RenderProxyHandler.h"
 #include "BrowserPool.h"
+#include "CefBrowserHandler.h"
 
 
 RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port, int numBrowsers) {
 	port_ = port;
 	LOG(INFO) << "ProxygenServer server starting....";
 
+	cefBrowserHandler_ = new CefBrowserHandler();
+
 	// Pool browsers here
-	browserPool_ = new BrowserPool(numBrowsers);
+	browserPool_ = new BrowserPool(cefBrowserHandler_, numBrowsers);
 	browserPool_->Initialize();
 }
 
