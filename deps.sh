@@ -27,8 +27,17 @@ apt-get install -yq \
     libgoogle-glog-dev \
     wget
 
+echo "Installing gtest"
+# Clone the gtest repo from github.
+git clone https://github.com/google/googletest.git
+
+cd googletest
+cmake
+make install
+
+
 echo "Installing proxygen"
-# Clone the proxxygen repo from github!
+# Clone the proxygen repo from github.
 git clone https://github.com/facebook/proxygen.git
 
 cd proxygen/proxygen
