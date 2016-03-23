@@ -5,10 +5,11 @@
  *      Author: bam4d
  */
 
+#ifndef ROXXY_BUILD
 #include <gtest/gtest.h>
 
 // Build this if we are not doing a build of the main executable
-#ifndef ROXXY_BUILD
+
 
 using namespace testing;
 int main(int argc, char* argv[]) {

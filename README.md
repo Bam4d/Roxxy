@@ -76,7 +76,7 @@ Go ahead, use this as much as you want.
 
 ## Contributing
 
-Because this uses alot of C++ libraries I'd love some help! Especially from anyone who knows alot about chromium and facebook libraries.
+Because this uses alot of C++ libraries I'd love some help! Especially from anyone who knows alot about chromium / facebook / google libraries.
 
 ## Improvements
 
