@@ -1,30 +1,41 @@
 apply plugin: 'cpp'
+apply plugin: 'google-test'
 
 def cefResourcePath = file("ceflib").absolutePath
 
-def cefResources = copySpec {
+def cefAllResources = copySpec {
     from(cefResourcePath) {
         include "*"
 	include "locales/*"
     }
 }
 
+def cefTestResources = copySpec {
+    from(cefResourcePath) {
+        include "libcef.so"
+    }
+}
+
 task copyCefResources << {
-    ['build/exe/roxxy/debug', 'build/exe/roxxy/release'].each { dest ->
+    ['build/exe/roxxy'].each { dest ->
         copy {
             with cefResources
             into dest
         }
     }
+}
 
+task copyCefTestResources << {
+    ['build/exe/roxxyTest'].each { dest ->
+        copy {
+            with cefTestResources
+            into dest
+        }
+    }
 }
 
 model {
-    buildTypes {
-        debug
-        release
-    }
-
+    
     components {
         roxxy(NativeExecutableSpec) {
             sources {
@@ -32,22 +43,38 @@ model {
                     source {
                         srcDir "src"
                         include "**/*.cc"
+                        exclude "roxxyTest/*"
                     }
                 }
             }
         }
     }
-
+    
     binaries {
-        all {
-            // Linker and compiler arguments
+    	roxxyExecutable {
             if (toolChain in Gcc) {
                 cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
-                linker.args "-lglog", "-ldouble-conversion", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
-            }  
-            build.finalizedBy copyCefResources
+                linker.args "-lglog", "-ldouble-conversion", "-lpng" ,"-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
+            }
+            cppCompiler.define "ROXXY_BUILD"
+            
+            //build.finalizedBy copyCefResources
+            
         }
+       
+    	roxxyTestGoogleTestExe {
+		    if (toolChain in Gcc) {
+	            cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
+	            linker.args "-lgmock", "-lgtest", "-lglog", "-ldouble-conversion", "-lpng", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
+	        }
+	        //tasks.runRoxxyTestGoogleTestExe.dependsOn copyCefTestResources
+		    //runRoxxyTestGoogleTestExe.doFirst copyCefTestResources
+	    }
+		
+	
+        
     }
+    
 }
 
 

@@ -27,6 +27,9 @@ DEFINE_string(ip, "0.0.0.0", "IP/Hostname to bind to");
 DEFINE_int32(threads, 0, "Number of threads to listen on. Numbers <= 0 "
              "will use the number of cores on this machine.");
 
+
+// Only build this main method if we are not building a test module
+#ifdef ROXXY_BUILD
 // Entry point function for all processes.
 int main(int argc, char* argv[]) {
 	// Provide CEF with command-line arguments.
@@ -85,3 +88,5 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#endif GTEST

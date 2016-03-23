@@ -85,4 +85,4 @@ Because this uses alot of C++ libraries I'd love some help! Especially from anyo
 
 ## Benchmarks
 
-I would love to benchmark this against phantomJS and any other qtWebKit / pyWebKit server.
+I would love to benchmark this against phantomJS/Splash and any other qtWebKit / pyWebKit server.
