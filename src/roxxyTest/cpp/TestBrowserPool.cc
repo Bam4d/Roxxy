@@ -95,34 +95,42 @@ TEST(BrowserPoolTest, TestAssignBrowser) {
 	delete pool;
 }
 
-#define NUM_BROWSERS 2
+/**
+ * Test that if we have NUM_BROWSERS browsers and there are NUM_THREADS users simultaneously doing NUM_REQUESTERS requests,
+ * we can easily track the browsers that are currently being used and which are not, we should also have no race conditions or mis-assigned browser/proxyhandlers
+ */
+#define NUM_BROWSERS 50
 #define NUM_REQUESTERS 10
-#define NUM_THREADS 10
+#define NUM_THREADS 100
 TEST(BrowserPoolTest, TestAsyncAssignRelease) {
 
-	CefRefPtr<MockCefBrowserHandler> handler = new MockCefBrowserHandler();
-	BrowserPool *pool = new BrowserPool(handler, NUM_BROWSERS);
-	std::vector<MockRenderProxyHandler*> renderProxyHandlers(NUM_REQUESTERS);
-	std::vector<CefRefPtr<MockCefBrowser>> browsers(NUM_BROWSERS);
+	MockCefBrowserHandler* handler = new MockCefBrowserHandler();
+	BrowserPool *pool = new BrowserPool(CefRefPtr<MockCefBrowserHandler>(handler), NUM_BROWSERS);
+	std::vector<MockCefBrowser*> browsers(NUM_BROWSERS);
 
 	std::vector<std::thread> threads(NUM_THREADS);
 
+	EXPECT_CALL(*handler, ResetBrowser(_)).Times(NUM_REQUESTERS*NUM_THREADS);
+
 	for(int b = 0; b < NUM_BROWSERS; b++) {
 		browsers[b] = new MockCefBrowser();
-		EXPECT_CALL(*browsers[b].get(), GetIdentifier()).WillRepeatedly(Return(b));
-		pool->RegisterBrowser(browsers[b]);
+		EXPECT_CALL(*browsers[b], GetIdentifier()).WillRepeatedly(Return(b));
+		pool->RegisterBrowser(CefRefPtr<MockCefBrowser>(browsers[b]));
 	}
 
 	// Repeat the process of requesting browser to be assigned from the pool 10 times
 	for(int t = 0; t < NUM_THREADS; t++) {
 		threads[t] = std::thread([&] () {
-			for(int reps = 0; reps < 3; reps++) {
-				for(int r = 0; r < NUM_REQUESTERS; r++) {
-					renderProxyHandlers[r] = new MockRenderProxyHandler();
-					pool->AssignBrowserSync(renderProxyHandlers[r]);
-					// do some sort of waiting here ?
-					pool->ReleaseBrowserSync(renderProxyHandlers[r]);
-				}
+			for(int r = 0; r < NUM_REQUESTERS; r++) {
+				MockRenderProxyHandler* renderProxyHandler = new MockRenderProxyHandler();
+				int browserId = pool->AssignBrowserSync(renderProxyHandler);
+				EXPECT_TRUE(browserId<NUM_BROWSERS);
+				EXPECT_EQ(pool->GetAssignedBrowserId(renderProxyHandler), browserId);
+				EXPECT_EQ(pool->GetAssignedRenderProxyHandler(browserId), renderProxyHandler);
+
+				pool->ReleaseBrowserSync(renderProxyHandler);
+
+				delete renderProxyHandler;
 			}
 		});
 	}
@@ -130,6 +138,11 @@ TEST(BrowserPoolTest, TestAsyncAssignRelease) {
 	for (auto& t : threads) {
 		t.join();
 	}
+
+	for(auto brow : browsers) {
+		delete brow;
+	}
+	delete handler;
 
 }
 
