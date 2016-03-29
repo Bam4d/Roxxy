@@ -17,16 +17,16 @@ def cefTestResources = copySpec {
 }
 
 task copyCefResources << {
-    ['build/exe/roxxy'].each { dest ->
+    ['build/install/roxxy/lib'].each { dest ->
         copy {
-            with cefResources
+            with cefAllResources
             into dest
         }
     }
 }
 
 task copyCefTestResources << {
-    ['build/exe/roxxyTest'].each { dest ->
+    ['build/install/roxxyTest/lib'].each { dest ->
         copy {
             with cefTestResources
             into dest
@@ -35,6 +35,15 @@ task copyCefTestResources << {
 }
 
 model {
+	tasks {
+        installRoxxyTestGoogleTestExe {
+            finalizedBy copyCefTestResources
+        }
+        
+        installRoxxyExecutable {
+            finalizedBy copyCefResources
+        }
+    }
     
     components {
         roxxy(NativeExecutableSpec) {
@@ -67,8 +76,7 @@ model {
 	            cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
 	            linker.args "-lgmock", "-lgtest", "-lglog", "-ldouble-conversion", "-lpng", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
 	        }
-	        //tasks.runRoxxyTestGoogleTestExe.dependsOn copyCefTestResources
-		    //runRoxxyTestGoogleTestExe.doFirst copyCefTestResources
+	        
 	    }
 		
 	
