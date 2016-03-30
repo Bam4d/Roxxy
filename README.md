@@ -37,13 +37,15 @@ Firstly download the dependencies by running:
 sudo ./deps.sh
 ```
 
+call a tedious relative ... this takes ages...
+
 You can now build using:
 
 ```
 gradle build
 ```
 
-The executables will be located in `build/exe/roxxy/debug` and `build/exe/roxxy/release` for debug and release versions
+The executables will be located in `build/exe/roxxy` and `build/exe/roxxy` for debug and release versions
 
 ## Usage
 

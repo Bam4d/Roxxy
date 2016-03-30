@@ -77,7 +77,7 @@ void RenderProxyHandlerImpl::onEOM() noexcept {
 		} else {
 			ResponseBuilder(downstream_)
 				.status(404, "NOT_FOUND")
-				.body("Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A")
+				.body("Url get parameter must be set, for example http://localhost:8055/html?url=http%3A%2F%2Fwww.google.com%0A")
 				.sendWithEOM();
 			return;
 		}
