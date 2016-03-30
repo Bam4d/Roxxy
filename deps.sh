@@ -57,4 +57,4 @@ echo "Installing gradle..."
 ./gradlew
 
 echo "Building Roxxy.."
-gradle build
+gradlew build
