@@ -34,7 +34,7 @@ Roxxy uses gradle to build, but we first need to download some dependencies.
 Firstly download the dependencies by running:
 
 ```
-./deps.sh
+sudo ./deps.sh
 ```
 
 You can now build using:
@@ -72,6 +72,7 @@ Send a url to roxxy using it's REST GET API
 * Functional testing using python
 * Could make this scriptable, so scripts can be run on the browser?
 * Transparent proxy mode
+* Docker image
 
 
 ## Commercially
@@ -87,6 +88,12 @@ Go ahead, use this as much as you want.
 Because this uses a lot of C++ libraries I'd love some help! Especially from anyone who knows alot about chromium / facebook / google libraries.
 I need to set up a github wiki with some examples.
 
+Please create a feature branch i.e `feature/fix-crap-code` from the `master` branch, make sure the tests work after you have made your changes.
+
+When you are sure your branch is ready, please create a pull request.
+
 ## Benchmarks
 
 I would love to benchmark this against phantomJS/Splash and any other qtWebKit / pyWebKit server.
+
+
