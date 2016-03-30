@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [ "$(id -u)" != "0" ]; then
-	echo "Please run with sudo access, Roxxy needs to install some development libraries to build."
-	exit 1
-fi
-
 echo "Installing cef lib binaries"
 # Firstly pick up the compiled libs from s3!
 wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz ceflib.tar.gz
@@ -13,11 +8,11 @@ tar -xvf ceflib.tar.gz
 
 echo "Installing pxygen dependencies"
 # Install lib dependencies for proxygen
-apt-get update
-apt-get install -yq git
-apt-get install -yq curl
-apt-get install -yq cmake build-essential
-apt-get install -yq \
+sudo apt-get update
+sudo apt-get install -yq git
+sudo apt-get install -yq curl
+sudo apt-get install -yq cmake build-essential
+sudo apt-get install -yq \
     flex \
     bison \
     libkrb5-dev \
@@ -38,7 +33,7 @@ git clone https://github.com/google/googletest.git
 
 cd googletest
 cmake
-make install
+sudo make install
 
 cd ../
 

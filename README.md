@@ -34,7 +34,7 @@ Roxxy uses gradle to build, but we first need to download some dependencies.
 Firstly download the dependencies by running:
 
 ```
-sudo ./deps.sh
+./deps.sh
 ```
 
 call a tedious relative ... this takes ages...
