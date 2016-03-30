@@ -128,7 +128,7 @@ void CefBrowserHandlerImpl::ResetBrowser(CefRefPtr<CefBrowser> browser) {
 }
 
 void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
-	LOG(INFO)<< "Browser: " << browser->GetIdentifier() << "Loading state changed:" << isLoading << canGoBack << canGoForward;
+	//LOG(INFO)<< "Browser: " << browser->GetIdentifier() << "Loading state changed:" << isLoading << canGoBack << canGoForward;
 	if(!isLoading) {
 
 		bool isAboutBlank = browser->GetMainFrame()->GetURL() == "about:blank";
