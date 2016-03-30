@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$(id -u)" != "0" ]; then
+	echo "Please run with sudo access, Roxxy needs to install some development libraries to build."
+	exit 1
+fi
+
 echo "Installing cef lib binaries"
 # Firstly pick up the compiled libs from s3!
 wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz ceflib.tar.gz
@@ -35,6 +40,7 @@ cd googletest
 cmake
 make install
 
+cd ../
 
 echo "Installing proxygen"
 # Clone the proxygen repo from github.

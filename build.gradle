@@ -17,7 +17,7 @@ def cefTestResources = copySpec {
 }
 
 task copyCefResources << {
-    ['build/install/roxxy/lib'].each { dest ->
+    ['build/exe/roxxy'].each { dest ->
         copy {
             with cefAllResources
             into dest
@@ -40,7 +40,7 @@ model {
             finalizedBy copyCefTestResources
         }
         
-        installRoxxyExecutable {
+        roxxyExecutable {
             finalizedBy copyCefResources
         }
     }

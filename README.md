@@ -66,6 +66,14 @@ Send a url to roxxy using it's REST GET API
 > curl localhost:8055/png?url=http://www.google.com
 ```
 
+## TODO
+
+* More unit tests
+* Functional testing using python
+* Could make this scriptable, so scripts can be run on the browser?
+* Transparent proxy mode
+
+
 ## Commercially
 
 If you wish to use this software commercially please contact me.
@@ -76,12 +84,8 @@ Go ahead, use this as much as you want.
 
 ## Contributing
 
-Because this uses alot of C++ libraries I'd love some help! Especially from anyone who knows alot about chromium / facebook / google libraries.
-
-## Improvements
-
-* Could make this scriptable, so scripts can be run on the browser?
-* Transparent proxy mode
+Because this uses a lot of C++ libraries I'd love some help! Especially from anyone who knows alot about chromium / facebook / google libraries.
+I need to set up a github wiki with some examples.
 
 ## Benchmarks
 
