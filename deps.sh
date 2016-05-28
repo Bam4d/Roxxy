@@ -30,9 +30,9 @@ sudo apt-get install -yq \
 echo "Installing gtest"
 # Clone the gtest repo from github.
 git clone https://github.com/google/googletest.git
-
+git checkout tags/release-1.7.0
 cd googletest
-cmake
+cmake .
 sudo make install
 
 cd ../
@@ -40,7 +40,7 @@ cd ../
 echo "Installing proxygen"
 # Clone the proxygen repo from github.
 git clone https://github.com/facebook/proxygen.git
-
+git checkout tags/v0.32.0
 cd proxygen/proxygen
 
 echo "Installing proxygen.."

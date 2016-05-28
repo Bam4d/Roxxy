@@ -30,7 +30,6 @@ using namespace proxygen;
 
 RenderProxyHandlerImpl::RenderProxyHandlerImpl(BrowserPool* browserPool) {
 	//LOG(INFO) << "ProxyHandler created.";
-
 	browserPool_ = browserPool;
 }
 
@@ -44,7 +43,6 @@ void RenderProxyHandlerImpl::onRequest(std::unique_ptr<HTTPMessage> request)
 
 	// Have to store the evb in this object so we can re-use the thread to send responses
 	evb = folly::EventBaseManager::get()->getExistingEventBase();
-
 	request_ = std::move(request);
 
 	browserPool_->AssignBrowserSync(this);
@@ -57,7 +55,59 @@ void RenderProxyHandlerImpl::onBody(std::unique_ptr<folly::IOBuf> body) noexcept
 	} else {
 		requestBody_ = std::move(body);
 	}
+}
 
+void RenderProxyHandlerImpl::HandleGet() {
+
+	std::string getUrl = request_->getDecodedQueryParam("url");
+	std::string path = request_->getPath();
+
+	if(path == "/png") {
+		LOG(INFO) << "PNG image requested";
+		requestType = PNG;
+	} else if(path == "/html") {
+		requestType = HTML;
+		LOG(INFO) << "HTML page requested";
+	} else if(path == "/_status") {
+		requestType = STATUS;
+		LOG(INFO) << "STATUS page requested";
+	} else {
+		ResponseBuilder(downstream_)
+			.status(404, "NOT_FOUND")
+			.body("{\"message\": \"The endpoint you have requested does not exist\"}")
+			.sendWithEOM();
+		return;
+	}
+
+	if(!getUrl.empty() && !boost::starts_with(getUrl, "about:") && !boost::starts_with(getUrl, "chrome://")){
+		this->url = getUrl;
+		browserPool_->StartBrowserSession(this);
+	} else {
+		ResponseBuilder(downstream_)
+			.status(400, "BAD_REQUEST")
+			.body("{\"message\": \"Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A\"}")
+			.sendWithEOM();
+	}
+}
+
+void RenderProxyHandlerImpl::HandlePost() {
+	std::string path = request_->getPath();
+
+	LOG(INFO) << "CUSTOM endpoint requested";
+
+	dynamic jsonRequest = BufferUtils::GetJson(std::move(requestBody_));
+
+	std::string getUrl = jsonRequest["url"].asString().toStdString();
+
+	if(!getUrl.empty() && !boost::starts_with(getUrl, "about:") && !boost::starts_with(getUrl, "chrome://")){
+		this->url = getUrl;
+		browserPool_->StartBrowserSession(this);
+	} else {
+		ResponseBuilder(downstream_)
+			.status(400, "BAD_REQUEST")
+			.body("{\"message\": \"Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A\"}")
+			.sendWithEOM();
+	}
 }
 
 void RenderProxyHandlerImpl::onEOM() noexcept {
@@ -65,34 +115,21 @@ void RenderProxyHandlerImpl::onEOM() noexcept {
 
 	try {
 
-		std::string getUrl = request_->getDecodedQueryParam("url");
-		std::string path = request_->getPath();
-
-		if(path == "/png") {
-			LOG(INFO) << "PNG image requested";
-			requestType = PNG;
-		} else if(path == "/html") {
-			requestType = HTML;
-			LOG(INFO) << "HTML page requested";
-		} else {
-			ResponseBuilder(downstream_)
-				.status(404, "NOT_FOUND")
-				.body("Url get parameter must be set, for example http://localhost:8055/html?url=http%3A%2F%2Fwww.google.com%0A")
-				.sendWithEOM();
-			return;
+		switch(*request_->getMethod()){
+			case HTTPMethod::GET:
+				HandleGet();
+				break;
+			case HTTPMethod::POST:
+				HandlePost();
+				break;
+			default:
+				LOG(INFO) << "Request error";
+				ResponseBuilder(downstream_)
+					.status(405, "METHOD_NOT_ALLOWED")
+					.body("Cannot process request.")
+					.sendWithEOM();
+				break;
 		}
-
-		if(!getUrl.empty() && !boost::starts_with(getUrl, "about:") && !boost::starts_with(getUrl, "chrome://")){
-			this->url = getUrl;
-			browserPool_->StartBrowserSession(this);
-		} else {
-			ResponseBuilder(downstream_)
-				.status(400, "BAD_REQUEST")
-				.body("Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A")
-				.sendWithEOM();
-		}
-
-
 
 	} catch(...) {
 		LOG(INFO) << "Request error";

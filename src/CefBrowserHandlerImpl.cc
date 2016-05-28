@@ -151,15 +151,28 @@ void CefBrowserHandlerImpl::OnPageLoadExecuted(const CefString& string, int brow
 	DCHECK(browserPool_ != nullptr);
 
 	switch(browserPool_->GetAssignedRenderProxyHandler(browserId)->GetRequestType()) {
-		case HTML:
+		case RequestType::HTML:
+		{
 			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse(string);
 			break;
-		case PNG:
+		}
+		case RequestType::PNG:
+		{
 			png_buffer* pngBuffer = &browserPool_->GetBrowserStateById(browserId)->pngBuffer;
 
 			LOG(INFO)<<"pngBuffer"<<pngBuffer;
 
 			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendImageResponse(pngBuffer->buffer, pngBuffer->size, "image/png");
+			break;
+		}
+		case RequestType::CUSTOM:
+		{
+			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse("Not yet implemented");
+			break;
+		}
+		case RequestType::STATUS:
+			break;
+		default:
 			break;
 	}
 }

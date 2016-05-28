@@ -15,10 +15,13 @@ using folly::dynamic;
 using folly::parseJson;
 using folly::toJson;
 
+/**
+ * Utility functions for folly/proxygen buffers
+ */
 class BufferUtils {
 public:
-	static std::string getString(std::unique_ptr<folly::IOBuf> buf);
-	static dynamic getJson(std::unique_ptr<folly::IOBuf> buf);
+	static std::string GetString(std::unique_ptr<folly::IOBuf> buf);
+	static dynamic GetJson(std::unique_ptr<folly::IOBuf> buf);
 };
 
 #endif /* UTILS_BUFFERUTILS_H_ */

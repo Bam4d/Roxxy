@@ -12,7 +12,9 @@
 
 enum RequestType: uint8_t {
 	HTML,
-	PNG
+	PNG,
+	CUSTOM,
+	STATUS,
 };
 
 class RenderProxyHandler: public proxygen::RequestHandler {

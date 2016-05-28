@@ -70,6 +70,10 @@ private:
 
 	void onError(proxygen::ProxygenError err) noexcept override;
 
+	void HandleGet();
+
+	void HandlePost();
+
 };
 
 #endif /* RENDERPROXYHANDLER_H_ */

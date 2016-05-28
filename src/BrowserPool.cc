@@ -46,8 +46,10 @@ void BrowserPool::RegisterBrowser(CefRefPtr<CefBrowser> browser) {
 	freeBrowserList_->blockingWrite(browser->GetIdentifier());
 }
 
-// Gets a browser instance from the pool
-// This will block until a browser is available
+/**
+ * Gets a browser instance from the pool
+ * This will block until a browser is available
+ */
 int BrowserPool::AssignBrowserSync(RenderProxyHandler* renderProxyHandler) {
 	DCHECK(renderProxyHandler != nullptr);
 
@@ -70,19 +72,23 @@ int BrowserPool::AssignBrowserSync(RenderProxyHandler* renderProxyHandler) {
  * Releases the browser from the renderProxyHandler back to the pool
  */
 void BrowserPool::ReleaseBrowserSync(RenderProxyHandler* renderProxyHandler) {
-	std::lock_guard<std::mutex> lock(browser_routing_mutex);
 
 	// Remove from the routing maps
 	int freeBrowserId = GetAssignedBrowserId(renderProxyHandler);
+
+
+	browserHandler_->ResetBrowser(getBrowserById(freeBrowserId));
+	browserState_[freeBrowserId].isLoaded = false;
+	std::lock_guard<std::mutex> lock(browser_routing_mutex);
 
 	browserIdToHandler_.erase(freeBrowserId);
 	handlerToBrowserId_.erase(renderProxyHandler);
 
 	// Add back to the freeBrowser list
-	freeBrowserList_->blockingWrite(freeBrowserId);
-	browserState_[freeBrowserId].isLoaded = false;
+	freeBrowserList_->write(freeBrowserId);
 
-	browserHandler_->ResetBrowser(getBrowserById(freeBrowserId));
+
+
 }
 
 void BrowserPool::SendResponse(int browserId, std::string responseContent) {
@@ -100,13 +106,17 @@ void BrowserPool::StartBrowserSession(RenderProxyHandler* renderProxyHandler) {
 	browserHandler_->StartBrowserSession(getBrowserById(GetAssignedBrowserId(renderProxyHandler)), renderProxyHandler->GetRequestedUrl());
 }
 
-// Get the render proxy handler for a specific browser
+/**
+ * Get the render proxy handler for a specific browser
+ */
 RenderProxyHandler* BrowserPool::GetAssignedRenderProxyHandler(int browserId) {
 	DCHECK(browserIdToHandler_.find(browserId) != browserIdToHandler_.end());
 	return browserIdToHandler_[browserId];
 }
 
-// Get the assigned browser for the renderProxyHandler
+/**
+ * Get the assigned browser for the renderProxyHandler
+ */
 int BrowserPool::GetAssignedBrowserId(RenderProxyHandler* renderProxyHandler) {
 	DCHECK(renderProxyHandler != nullptr);
 	DCHECK(handlerToBrowserId_.find(renderProxyHandler) != handlerToBrowserId_.end());

@@ -7,22 +7,17 @@
 
 #include "BufferUtils.h"
 
-std::string BufferUtils::getString(std::unique_ptr<folly::IOBuf> buf) {
-	std::stringstream out;
+std::string BufferUtils::GetString(std::unique_ptr<folly::IOBuf> buf) {
 
-	if (buf) {
-		const folly::IOBuf* p = buf.get();
-		do {
-			out.write((const char*) p->data(), p->length());
-			p = p->next();
-		} while (p->next() != buf.get());
-
-		return out.str();
+	if(buf){
+		return std::string(reinterpret_cast<const char*>(buf->data()),
+	                           buf->length());
 	}
+
 	return "";
 }
 
-dynamic BufferUtils::getJson(std::unique_ptr < folly::IOBuf > buf) {
-	std::string jsonString = BufferUtils::getString(std::move(buf));
+dynamic BufferUtils::GetJson(std::unique_ptr < folly::IOBuf > buf) {
+	std::string jsonString = BufferUtils::GetString(std::move(buf));
 	return parseJson(jsonString);
 }
