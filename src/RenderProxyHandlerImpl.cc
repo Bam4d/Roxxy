@@ -181,7 +181,7 @@ void RenderProxyHandlerImpl::PageRenderCompleted(const std::string htmlContent, 
 
 				response["html"] = htmlContent;
 				response["statusCode"] = statusCode;
-				response["png"] = base64Encode(folly::ByteRange(reinterpret_cast<unsigned char const*>(pngBuffer->buffer), pngBuffer->size));
+				response["png"] = BufferUtils::Base64Encode(reinterpret_cast<const char*>(pngBuffer->buffer), pngBuffer->size);
 
 				SendCustomResponse(response);
 				break;
