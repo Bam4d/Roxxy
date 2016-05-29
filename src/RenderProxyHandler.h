@@ -9,6 +9,8 @@
 #define SRC_RENDERPROXYHANDLER_H_
 
 #include <proxygen/httpserver/RequestHandler.h>
+#include <folly/json.h>
+
 
 enum RequestType: uint8_t {
 	HTML,
@@ -17,17 +19,25 @@ enum RequestType: uint8_t {
 	STATUS,
 };
 
+class png_buffer;
+
+using folly::dynamic;
+
 class RenderProxyHandler: public proxygen::RequestHandler {
 public:
 	virtual ~RenderProxyHandler() {};
 
-	virtual void SendResponse(std::string response_data) = 0;
-
-	virtual void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) = 0;
+	virtual void PageRenderCompleted(const std::string htmlContent, int status, png_buffer* pngBuffer) = 0;
 
 	virtual const std::string GetRequestedUrl() = 0;
 
 	virtual const RequestType GetRequestType() = 0;
+private:
+	virtual void SendHtmlResponse(std::string responseData) = 0;
+
+	virtual void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) = 0;
+
+	virtual void SendCustomResponse(dynamic jsonResponse) = 0;
 
 };
 

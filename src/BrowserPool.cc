@@ -91,11 +91,6 @@ void BrowserPool::ReleaseBrowserSync(RenderProxyHandler* renderProxyHandler) {
 
 }
 
-void BrowserPool::SendResponse(int browserId, std::string responseContent) {
-	RenderProxyHandler* renderProxyHandler = GetAssignedRenderProxyHandler(browserId);
-	renderProxyHandler->SendResponse(responseContent);
-}
-
 /**
  * Start the browser session with the assigned browser
  */

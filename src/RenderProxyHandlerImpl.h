@@ -16,16 +16,14 @@ class BrowserPool;
 
 #include "RenderProxyHandler.h"
 
-
+using folly::dynamic;
 
 class RenderProxyHandlerImpl: public RenderProxyHandler {
 public:
 	RenderProxyHandlerImpl(BrowserPool* browserHandler);
 	virtual ~RenderProxyHandlerImpl();
 
-	void SendResponse(std::string response_data) override;
-
-	void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) override;
+	void PageRenderCompleted(const std::string htmlContent, int status, png_buffer* png_buffer) override;
 
 	const std::string GetRequestedUrl() override {
 		return url;
@@ -73,6 +71,12 @@ private:
 	void HandleGet();
 
 	void HandlePost();
+
+	void SendHtmlResponse(std::string response_data) override;
+
+	void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) override;
+
+	void SendCustomResponse(dynamic jsonResponse) override;
 
 };
 

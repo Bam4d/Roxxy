@@ -9,6 +9,7 @@
 
 #include <proxygen/httpserver/RequestHandler.h>
 #include <proxygen/httpserver/ResponseBuilder.h>
+#include <proxygen/lib/utils/CryptUtil.h>
 #include <memory>
 
 #include <folly/json.h>
@@ -18,6 +19,8 @@
 using folly::dynamic;
 using folly::parseJson;
 using folly::toJson;
+
+using proxygen::base64Encode;
 
 /**
  * Local includes
@@ -93,6 +96,7 @@ void RenderProxyHandlerImpl::HandleGet() {
 void RenderProxyHandlerImpl::HandlePost() {
 	std::string path = request_->getPath();
 
+	requestType = CUSTOM;
 	LOG(INFO) << "CUSTOM endpoint requested";
 
 	dynamic jsonRequest = BufferUtils::GetJson(std::move(requestBody_));
@@ -159,6 +163,49 @@ void RenderProxyHandlerImpl::onError(ProxygenError err) noexcept {
 	delete this;
 }
 
+void RenderProxyHandlerImpl::PageRenderCompleted(const std::string htmlContent, int statusCode, png_buffer* pngBuffer) {
+	switch(requestType) {
+			case RequestType::HTML:
+			{
+				SendHtmlResponse(htmlContent);
+				break;
+			}
+			case RequestType::PNG:
+			{
+				SendImageResponse(pngBuffer->buffer, pngBuffer->size, "image/png");
+				break;
+			}
+			case RequestType::CUSTOM:
+			{
+				dynamic response = dynamic::object;
+
+				response["html"] = htmlContent;
+				response["statusCode"] = statusCode;
+				response["png"] = base64Encode(folly::ByteRange(reinterpret_cast<unsigned char const*>(pngBuffer->buffer), pngBuffer->size));
+
+				SendCustomResponse(response);
+				break;
+			}
+			case RequestType::STATUS:
+				break;
+			default:
+				break;
+		}
+}
+
+void RenderProxyHandlerImpl::SendCustomResponse(dynamic jsonResponse) {
+	DCHECK(evb != nullptr);
+
+	std::string jsonResponseString = toJson(jsonResponse).toStdString();
+
+	evb->runInEventBaseThread([&, jsonResponseString] () {
+			ResponseBuilder(downstream_).status(200, "OK")
+					.body(jsonResponseString)
+					.header(HTTP_HEADER_CONTENT_TYPE, "application/json")
+					.sendWithEOM();
+		});
+}
+
 void RenderProxyHandlerImpl::SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) {
 	DCHECK(evb != nullptr);
 
@@ -173,7 +220,7 @@ void RenderProxyHandlerImpl::SendImageResponse(const void* buffer, size_t conten
 	});
 }
 
-void RenderProxyHandlerImpl::SendResponse(std::string responseContent) {
+void RenderProxyHandlerImpl::SendHtmlResponse(std::string responseContent) {
 	DCHECK(evb != nullptr);
 
 	LOG(INFO)<<"Sending html response";
@@ -184,9 +231,6 @@ void RenderProxyHandlerImpl::SendResponse(std::string responseContent) {
 
 		ResponseBuilder(downstream_).status(200, "OK")
 				.body(response)
-				//.header("roxxy-url", url_)
-				//.header("roxxy-bears","BEARS!")
-				//.header("content-length", folly::to<std::string>(response.length()))
 				.sendWithEOM();
 	});
 }

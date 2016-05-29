@@ -48,9 +48,6 @@ public:
 
 	void StartBrowserSession(RenderProxyHandler* renderProxyHandler);
 
-	// Send a response to the client
-	void SendResponse(int browser, std::string responseContent);
-
 	// Get the render proxy handler for a specific browser
 	RenderProxyHandler* GetAssignedRenderProxyHandler(int browserId);
 

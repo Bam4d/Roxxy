@@ -15,8 +15,12 @@ using namespace testing;
 
 class MockRenderProxyHandler : public RenderProxyHandler {
 public:
-	MOCK_METHOD1(SendResponse,
-			void(std::string response_data));
+	MOCK_METHOD3(PageRenderCompleted,
+				void(std::string htmlContent, int status, png_buffer* pngBuffer));
+	MOCK_METHOD1(SendCustomResponse,
+				void(dynamic jsonData));
+	MOCK_METHOD1(SendHtmlResponse,
+			void(std::string htmlContent));
 	MOCK_METHOD3(SendImageResponse,
 			void(const void* buffer, size_t contentLength, std::string contentType));
 	MOCK_METHOD0(GetRequestedUrl,

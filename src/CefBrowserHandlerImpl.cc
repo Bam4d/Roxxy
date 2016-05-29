@@ -115,7 +115,6 @@ void CefBrowserHandlerImpl::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr
 			<< ").</h2></body></html>";
 
 
-	//renderProxyHandler_->SendResponse(ss.str());
 }
 
 /**
@@ -149,32 +148,7 @@ void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, 
 
 void CefBrowserHandlerImpl::OnPageLoadExecuted(const CefString& string, int browserId) {
 	DCHECK(browserPool_ != nullptr);
-
-	switch(browserPool_->GetAssignedRenderProxyHandler(browserId)->GetRequestType()) {
-		case RequestType::HTML:
-		{
-			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse(string);
-			break;
-		}
-		case RequestType::PNG:
-		{
-			png_buffer* pngBuffer = &browserPool_->GetBrowserStateById(browserId)->pngBuffer;
-
-			LOG(INFO)<<"pngBuffer"<<pngBuffer;
-
-			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendImageResponse(pngBuffer->buffer, pngBuffer->size, "image/png");
-			break;
-		}
-		case RequestType::CUSTOM:
-		{
-			browserPool_->GetAssignedRenderProxyHandler(browserId)->SendResponse("Not yet implemented");
-			break;
-		}
-		case RequestType::STATUS:
-			break;
-		default:
-			break;
-	}
+	browserPool_->GetAssignedRenderProxyHandler(browserId)->PageRenderCompleted(string, 200, &browserPool_->GetBrowserStateById(browserId)->pngBuffer);
 }
 
 void CefBrowserHandlerImpl::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {

@@ -100,7 +100,7 @@ TEST(BrowserPoolTest, TestAssignBrowser) {
  * we can easily track the browsers that are currently being used and which are not, we should also have no race conditions or mis-assigned browser/proxyhandlers
  */
 #define NUM_BROWSERS 50
-#define NUM_REQUESTERS 10
+#define NUM_REQUESTERS 100
 #define NUM_THREADS 100
 TEST(BrowserPoolTest, TestAsyncAssignRelease) {
 
