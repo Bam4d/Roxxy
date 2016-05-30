@@ -25,11 +25,41 @@ using namespace std;
 using namespace folly;
 
 /**
- * Structure containing state information for a browser.
+ * Structure containing session information for a browser.
+ *
+ * For example, what has been requested on the API, and what the current state of the browser is
  */
-struct BrowserState {
+struct BrowserSession {
+
+	/**
+	 * If the browser has loaded or is still loading
+	 */
 	bool isLoaded = false;
+
+	/**
+	 * Scripts to run on the page after load if any
+	 */
+	std::map<std::string, std::string> scripts;
+
+	/**
+	 * Status code of the page (default 200)
+	 */
+	int statusCode = 200;
+
+	/**
+	 * Html content of the page
+	 */
+	std::string htmlContent;
+
+	/**
+	 * Buffer to store a png image of the page, if requested
+	 */
 	png_buffer pngBuffer;
+
+	/**
+	 * Whether or not the image of the page has been requested
+	 */
+	bool pngRequested;
 };
 
 /**
@@ -61,7 +91,7 @@ public:
 
 	CefRefPtr<CefBrowser> getBrowserById(int id);
 
-	BrowserState* GetBrowserStateById(int id);
+	BrowserSession* GetBrowserSessionById(int id);
 
 private:
 
@@ -70,7 +100,7 @@ private:
 	int numBrowsers_;
 
 	//Load start and end counters for each browser
-	std::map<int, BrowserState> browserState_;
+	std::map<int, BrowserSession> browserSession_;
 
 	// Manage the browser resources
 	typedef std::list<CefRefPtr<CefBrowser>> BrowserList;

@@ -48,7 +48,7 @@ void RenderProxyHandlerImpl::onRequest(std::unique_ptr<HTTPMessage> request)
 	evb = folly::EventBaseManager::get()->getExistingEventBase();
 	request_ = std::move(request);
 
-	browserPool_->AssignBrowserSync(this);
+	hasAssignedBrowser_ = browserPool_->AssignBrowserSync(this) > 0;
 
 }
 
@@ -89,6 +89,7 @@ void RenderProxyHandlerImpl::HandleGet() {
 		ResponseBuilder(downstream_)
 			.status(400, "BAD_REQUEST")
 			.body("{\"message\": \"Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A\"}")
+			.closeConnection()
 			.sendWithEOM();
 	}
 }
@@ -105,17 +106,37 @@ void RenderProxyHandlerImpl::HandlePost() {
 
 	if(!getUrl.empty() && !boost::starts_with(getUrl, "about:") && !boost::starts_with(getUrl, "chrome://")){
 		this->url = getUrl;
+
+		int browserId = browserPool_->GetAssignedBrowserId(this);
+		BrowserSession* session = browserPool_->GetBrowserSessionById(browserId);
+
+		// Set the browser session variables
+		if(jsonRequest["png"] != nullptr) {
+			session->pngRequested = jsonRequest["png"].asBool();
+		}
+
 		browserPool_->StartBrowserSession(this);
 	} else {
 		ResponseBuilder(downstream_)
 			.status(400, "BAD_REQUEST")
 			.body("{\"message\": \"Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A\"}")
+			.closeConnection()
 			.sendWithEOM();
 	}
 }
 
 void RenderProxyHandlerImpl::onEOM() noexcept {
 	DCHECK(browserPool_ != nullptr);
+
+	// If we did not assign a browser to this request, then we do not handle it currently
+	if(!hasAssignedBrowser_) {
+		ResponseBuilder(downstream_)
+					.status(420, "NO_FREE_BROWSERS")
+					.body("{\"message\": \"No browsers free currently, please wait and try again.\"}")
+					.closeConnection()
+					.sendWithEOM();
+		return;
+	}
 
 	try {
 
@@ -131,6 +152,7 @@ void RenderProxyHandlerImpl::onEOM() noexcept {
 				ResponseBuilder(downstream_)
 					.status(405, "METHOD_NOT_ALLOWED")
 					.body("Cannot process request.")
+					.closeConnection()
 					.sendWithEOM();
 				break;
 		}
@@ -140,6 +162,7 @@ void RenderProxyHandlerImpl::onEOM() noexcept {
 		ResponseBuilder(downstream_)
 			.status(400, "BAD_REQUEST")
 			.body("Cannot process request.")
+			.closeConnection()
 			.sendWithEOM();
 	}
 
@@ -151,37 +174,47 @@ void RenderProxyHandlerImpl::onUpgrade(UpgradeProtocol protocol) noexcept {
 
 void RenderProxyHandlerImpl::requestComplete() noexcept {
 	DCHECK(browserPool_ != nullptr);
-	LOG(INFO) << "Request complete: " << url << " ... Releasing browser: " << browserPool_->GetAssignedBrowserId(this);
-	browserPool_->ReleaseBrowserSync(this);
+	if(hasAssignedBrowser_) {
+		LOG(INFO) << "Request complete: " << url << " ... Releasing browser: " << browserPool_->GetAssignedBrowserId(this);
+		browserPool_->ReleaseBrowserSync(this);
+	}
 	delete this;
 }
 
 void RenderProxyHandlerImpl::onError(ProxygenError err) noexcept {
 	DCHECK(browserPool_ != nullptr);
-	LOG(WARNING) << "Request error";
-	browserPool_->ReleaseBrowserSync(this);
+	if(hasAssignedBrowser_) {
+		LOG(WARNING) << "Request error";
+		browserPool_->ReleaseBrowserSync(this);
+	}
 	delete this;
 }
 
-void RenderProxyHandlerImpl::PageRenderCompleted(const std::string htmlContent, int statusCode, png_buffer* pngBuffer) {
+void RenderProxyHandlerImpl::PageRenderCompleted(BrowserSession* browserSession) {
 	switch(requestType) {
 			case RequestType::HTML:
 			{
-				SendHtmlResponse(htmlContent);
+				SendHtmlResponse(browserSession->htmlContent);
 				break;
 			}
 			case RequestType::PNG:
 			{
-				SendImageResponse(pngBuffer->buffer, pngBuffer->size, "image/png");
+				SendImageResponse(browserSession->pngBuffer.buffer, browserSession->pngBuffer.size, "image/png");
 				break;
 			}
 			case RequestType::CUSTOM:
 			{
+				LOG(INFO)<<"Building custom response";
 				dynamic response = dynamic::object;
 
-				response["html"] = htmlContent;
-				response["statusCode"] = statusCode;
-				response["png"] = BufferUtils::Base64Encode(reinterpret_cast<const char*>(pngBuffer->buffer), pngBuffer->size);
+				//LOG(INFO)<<"Building custom response"<<browserSession->htmlContent;
+				response["html"] = browserSession->htmlContent;
+				response["statusCode"] = browserSession->statusCode;
+
+				if(browserSession->pngRequested) {
+					response["png"] = proxygen::base64Encode(folly::ByteRange(reinterpret_cast<const unsigned char*>(browserSession->pngBuffer.buffer), browserSession->pngBuffer.size));
+					//response["png"] = BufferUtils::Base64Encode(reinterpret_cast<const char*>(browserSession->pngBuffer.buffer), browserSession->pngBuffer.size);
+				}
 
 				SendCustomResponse(response);
 				break;
@@ -193,23 +226,33 @@ void RenderProxyHandlerImpl::PageRenderCompleted(const std::string htmlContent, 
 		}
 }
 
+void RenderProxyHandlerImpl::SendErrorResponse(std::string message, int statusCode) {
+
+}
+
 void RenderProxyHandlerImpl::SendCustomResponse(dynamic jsonResponse) {
 	DCHECK(evb != nullptr);
 
 	std::string jsonResponseString = toJson(jsonResponse).toStdString();
 
-	evb->runInEventBaseThread([&, jsonResponseString] () {
+	LOG(INFO)<<"Sending custom response";
+	bool result = evb->runInEventBaseThreadAndWait([&, jsonResponseString] () {
+
+			LOG(INFO)<<"Sending custom response"<<jsonResponseString;
 			ResponseBuilder(downstream_).status(200, "OK")
 					.body(jsonResponseString)
 					.header(HTTP_HEADER_CONTENT_TYPE, "application/json")
 					.sendWithEOM();
 		});
+
+	DCHECK(result);
 }
 
 void RenderProxyHandlerImpl::SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) {
 	DCHECK(evb != nullptr);
 
-	evb->runInEventBaseThread([&, buffer, contentType, contentLength] () {
+
+	bool result = evb->runInEventBaseThread([&, buffer, contentType, contentLength] () {
 		std::unique_ptr<folly::IOBuf> imageBody = std::unique_ptr<folly::IOBuf>(new folly::IOBuf(folly::IOBuf::COPY_BUFFER, (const void*) buffer, contentLength));
 
 		ResponseBuilder(downstream_).status(200, "OK")
@@ -218,6 +261,8 @@ void RenderProxyHandlerImpl::SendImageResponse(const void* buffer, size_t conten
 				.header(HTTP_HEADER_CONTENT_LENGTH, folly::to<std::string>(contentLength))
 				.sendWithEOM();
 	});
+
+	DCHECK(result);
 }
 
 void RenderProxyHandlerImpl::SendHtmlResponse(std::string responseContent) {
@@ -225,14 +270,13 @@ void RenderProxyHandlerImpl::SendHtmlResponse(std::string responseContent) {
 
 	LOG(INFO)<<"Sending html response";
 
-	evb->runInEventBaseThread([&, responseContent] () {
-
-		std::string response = responseContent;
-
+	bool result = evb->runInEventBaseThread([&, responseContent] () {
 		ResponseBuilder(downstream_).status(200, "OK")
-				.body(response)
+				.body(responseContent)
 				.sendWithEOM();
 	});
+
+	DCHECK(result);
 }
 
 

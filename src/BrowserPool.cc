@@ -42,7 +42,7 @@ void BrowserPool::RegisterBrowser(CefRefPtr<CefBrowser> browser) {
 	LOG(INFO)<<"registering browser";
 
 	browserList_.push_back(browser);
-	browserState_.insert(std::make_pair(browser->GetIdentifier(),BrowserState()));
+	browserSession_.insert(std::make_pair(browser->GetIdentifier(),BrowserSession()));
 	freeBrowserList_->blockingWrite(browser->GetIdentifier());
 }
 
@@ -55,17 +55,22 @@ int BrowserPool::AssignBrowserSync(RenderProxyHandler* renderProxyHandler) {
 
 	// Get a free browser from the free browser list
 	int browserId;
-	freeBrowserList_->blockingRead(browserId);
-	CefRefPtr<CefBrowser> freeBrowser = getBrowserById(browserId);
+	if(freeBrowserList_->read(browserId)){
 
-	// We shouldn't block other browsers trying to write to the free browser list while we are waiting for a free browser.
-	// Therefore we start the mutex after we have popped the free browser
-	std::lock_guard<std::mutex> lock(browser_routing_mutex);
 
-	// Then we assign it to the handler
-	browserIdToHandler_.insert(std::make_pair(browserId, renderProxyHandler));
-	handlerToBrowserId_.insert(std::make_pair(renderProxyHandler, browserId));
-	return browserId;
+		CefRefPtr<CefBrowser> freeBrowser = getBrowserById(browserId);
+
+		// We shouldn't block other browsers trying to write to the free browser list while we are waiting for a free browser.
+		// Therefore we start the mutex after we have popped the free browser
+		std::lock_guard<std::mutex> lock(browser_routing_mutex);
+
+		// Then we assign it to the handler
+		browserIdToHandler_.insert(std::make_pair(browserId, renderProxyHandler));
+		handlerToBrowserId_.insert(std::make_pair(renderProxyHandler, browserId));
+		return browserId;
+	} else {
+		return -1;
+	}
 }
 
 /**
@@ -78,7 +83,7 @@ void BrowserPool::ReleaseBrowserSync(RenderProxyHandler* renderProxyHandler) {
 
 
 	browserHandler_->ResetBrowser(getBrowserById(freeBrowserId));
-	browserState_[freeBrowserId].isLoaded = false;
+	browserSession_[freeBrowserId].isLoaded = false;
 	std::lock_guard<std::mutex> lock(browser_routing_mutex);
 
 	browserIdToHandler_.erase(freeBrowserId);
@@ -121,8 +126,8 @@ int BrowserPool::GetAssignedBrowserId(RenderProxyHandler* renderProxyHandler) {
 /**
  * Get the browser state by the browser Id
  */
-BrowserState* BrowserPool::GetBrowserStateById(int browserId) {
-	return &browserState_[browserId];
+BrowserSession* BrowserPool::GetBrowserSessionById(int browserId) {
+	return &browserSession_[browserId];
 }
 
 

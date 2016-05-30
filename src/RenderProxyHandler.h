@@ -12,6 +12,7 @@
 #include <folly/json.h>
 
 
+
 enum RequestType: uint8_t {
 	HTML,
 	PNG,
@@ -19,7 +20,8 @@ enum RequestType: uint8_t {
 	STATUS,
 };
 
-class png_buffer;
+
+class BrowserSession;
 
 using folly::dynamic;
 
@@ -27,12 +29,14 @@ class RenderProxyHandler: public proxygen::RequestHandler {
 public:
 	virtual ~RenderProxyHandler() {};
 
-	virtual void PageRenderCompleted(const std::string htmlContent, int status, png_buffer* pngBuffer) = 0;
+	virtual void PageRenderCompleted(BrowserSession* browserSession) = 0;
 
 	virtual const std::string GetRequestedUrl() = 0;
 
 	virtual const RequestType GetRequestType() = 0;
 private:
+	virtual void SendErrorResponse(std::string message, int statusCode) = 0;
+
 	virtual void SendHtmlResponse(std::string responseData) = 0;
 
 	virtual void SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) = 0;

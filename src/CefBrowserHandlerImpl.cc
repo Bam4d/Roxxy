@@ -138,7 +138,7 @@ void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, 
 
 		// we have been to the about:blank page and we have loaded our new page
 		if(canGoBack) {
-			browserPool_->GetBrowserStateById(browser->GetIdentifier())->isLoaded = true;
+			browserPool_->GetBrowserSessionById(browser->GetIdentifier())->isLoaded = true;
 
 			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser: " << browser->GetIdentifier();
 			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; setTimeout(window.roxxy_loaded, 500);}", browser->GetMainFrame()->GetURL(),0);
@@ -146,9 +146,13 @@ void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, 
 	}
 }
 
-void CefBrowserHandlerImpl::OnPageLoadExecuted(const CefString& string, int browserId) {
+void CefBrowserHandlerImpl::OnPageLoadExecuted(const CefString& htmlContent, int browserId) {
 	DCHECK(browserPool_ != nullptr);
-	browserPool_->GetAssignedRenderProxyHandler(browserId)->PageRenderCompleted(string, 200, &browserPool_->GetBrowserStateById(browserId)->pngBuffer);
+	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browserId);
+
+	browserSession->htmlContent = htmlContent.ToString();
+
+	browserPool_->GetAssignedRenderProxyHandler(browserId)->PageRenderCompleted(browserSession);
 }
 
 void CefBrowserHandlerImpl::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
@@ -164,16 +168,63 @@ void CefBrowserHandlerImpl::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<C
 void CefBrowserHandlerImpl::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
 		const RectList& dirtyRects, const void* buffer, int width, int height) {
 
-	bool isLoaded = browserPool_->GetBrowserStateById(browser->GetIdentifier())->isLoaded;
+	bool isLoaded = browserPool_->GetBrowserSessionById(browser->GetIdentifier())->isLoaded;
 
 	if(isLoaded) {
-		png_buffer* pngBuffer = &browserPool_->GetBrowserStateById(browser->GetIdentifier())->pngBuffer;
+		png_buffer* pngBuffer = &browserPool_->GetBrowserSessionById(browser->GetIdentifier())->pngBuffer;
 
 		// Renders the page image as a png into our browser state png buffer
 		RenderPageImage::RenderPNG(buffer, pngBuffer, width, height);
 	}
 }
 
+
+/**
+ * Handle any javascript dialogs that come from the page
+ */
+bool CefBrowserHandlerImpl::OnJSDialog(CefRefPtr<CefBrowser> browser,
+		                          const CefString& origin_url,
+		                          const CefString& accept_lang,
+		                          JSDialogType dialog_type,
+		                          const CefString& message_text,
+		                          const CefString& default_prompt_text,
+		                          CefRefPtr<CefJSDialogCallback> callback,
+		                          bool& suppress_message) {
+	suppress_message = true;
+	LOG(INFO)<<"JS DIALOG"<<message_text.ToString();
+	return false;
+}
+
+/**
+ * CefRequestHandler methods
+ */
+cef_return_value_t CefBrowserHandlerImpl::OnBeforeResourceLoad(
+	  CefRefPtr<CefBrowser> browser,
+	  CefRefPtr<CefFrame> frame,
+	  CefRefPtr<CefRequest> request,
+	  CefRefPtr<CefRequestCallback> callback) {
+	LOG(INFO)<<"before resource loaded "<<request->GetURL().ToString();
+
+	return RV_CONTINUE;
+}
+
+void CefBrowserHandlerImpl::OnResourceRedirect(CefRefPtr<CefBrowser> browser,
+							  CefRefPtr<CefFrame> frame,
+							  CefRefPtr<CefRequest> request,
+							  CefString& new_url) {
+
+	LOG(INFO)<<"Resource "<<request->GetURL().ToString()<<" redirected "<<new_url.ToString();
+
+}
+
+bool CefBrowserHandlerImpl::OnResourceResponse(CefRefPtr<CefBrowser> browser,
+							  CefRefPtr<CefFrame> frame,
+							  CefRefPtr<CefRequest> request,
+							  CefRefPtr<CefResponse> response) {
+
+	LOG(INFO)<<"Resource "<<request->GetURL().ToString()<<" status code "<<response->GetStatus();
+
+}
 
 
 

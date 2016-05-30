@@ -33,7 +33,6 @@ RenderProxyHandlerFactory::~RenderProxyHandlerFactory() {
 
 void RenderProxyHandlerFactory::onServerStart(folly::EventBase* evb) noexcept {
 	LOG(INFO) << "Cef server started, listening for connections on port: " << port_;
-
 }
 
 void RenderProxyHandlerFactory::onServerStop() noexcept {

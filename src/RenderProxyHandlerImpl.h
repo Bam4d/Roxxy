@@ -23,7 +23,7 @@ public:
 	RenderProxyHandlerImpl(BrowserPool* browserHandler);
 	virtual ~RenderProxyHandlerImpl();
 
-	void PageRenderCompleted(const std::string htmlContent, int status, png_buffer* png_buffer) override;
+	void PageRenderCompleted(BrowserSession* browserSession) override;
 
 	const std::string GetRequestedUrl() override {
 		return url;
@@ -37,6 +37,9 @@ public:
 	std::string url;
 
 	RequestType requestType = HTML;
+
+	// If this request handler has an assigned browser, if it does not, we cannot process it
+	bool hasAssignedBrowser_;
 
 private:
 
@@ -71,6 +74,8 @@ private:
 	void HandleGet();
 
 	void HandlePost();
+
+	void SendErrorResponse(std::string message, int statusCode) override;
 
 	void SendHtmlResponse(std::string response_data) override;
 

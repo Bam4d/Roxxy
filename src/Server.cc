@@ -41,6 +41,7 @@ Server::Server(int threads, int port, std::string ip, int numBrowsers) {
 	options.idleTimeout = std::chrono::milliseconds(30000);
 	options.shutdownOn = {SIGINT, SIGTERM};
 	options.enableContentCompression = true;
+	options.contentCompressionLevel = 4;
 	options.handlerFactories = RequestHandlerChain()
 			.addThen<RenderProxyHandlerFactory>(port, numBrowsers)
 			.build();

@@ -46,6 +46,14 @@ public:
 		return this;
 	}
 
+	virtual CefRefPtr<CefRequestHandler> GetRequestHandler() override {
+		return this;
+	}
+
+	virtual CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() override {
+		return this;
+	}
+
 	void ResetBrowser(CefRefPtr<CefBrowser> browser);
 
 	void StartBrowserSession(CefRefPtr<CefBrowser> browser, std::string url);
@@ -61,12 +69,16 @@ private:
 
 	virtual void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
 
-	// CefLifeSpanHandler methods:
+	/**
+	 * CefLifeSpanHandler methods
+	 */
 	virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
 	virtual bool DoClose(CefRefPtr<CefBrowser> browser) override;
 	virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 
-	// CefLoadHandler methods:
+	/**
+	 *CefLoadHandler methods
+	 */
 	virtual void OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
 			bool isLoading,
 			bool canGoBack,
@@ -81,6 +93,39 @@ private:
 
 	virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
 			CefRefPtr<CefFrame> frame, int httpStatusCode) override;
+
+	/**
+	 * CefJSDialogHandler methods
+	 */
+	virtual bool OnJSDialog(CefRefPtr<CefBrowser> browser,
+		                          const CefString& origin_url,
+		                          const CefString& accept_lang,
+		                          JSDialogType dialog_type,
+		                          const CefString& message_text,
+		                          const CefString& default_prompt_text,
+		                          CefRefPtr<CefJSDialogCallback> callback,
+		                          bool& suppress_message) override;
+
+
+	/**
+	 * CefRequestHandler methods
+	 */
+	virtual ReturnValue OnBeforeResourceLoad(
+	      CefRefPtr<CefBrowser> browser,
+	      CefRefPtr<CefFrame> frame,
+	      CefRefPtr<CefRequest> request,
+	      CefRefPtr<CefRequestCallback> callback) override;
+
+
+	virtual void OnResourceRedirect(CefRefPtr<CefBrowser> browser,
+								  CefRefPtr<CefFrame> frame,
+								  CefRefPtr<CefRequest> request,
+								  CefString& new_url) override;
+
+	virtual bool OnResourceResponse(CefRefPtr<CefBrowser> browser,
+								  CefRefPtr<CefFrame> frame,
+								  CefRefPtr<CefRequest> request,
+								  CefRefPtr<CefResponse> response) override;
 
 	// Paint
 	virtual void OnPaint(CefRefPtr<CefBrowser> browser,
