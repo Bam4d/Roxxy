@@ -207,7 +207,6 @@ cef_return_value_t CefBrowserHandlerImpl::OnBeforeResourceLoad(
 	  CefRefPtr<CefRequestCallback> callback) {
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
 
-	LOG(INFO) << "OnBefore "<<browserSession->pageUrl;
 	// Set the first requested url as the main page url
 	if(browserSession->pageUrl.compare("about:blank") == 0) {
 		browserSession->pageUrl = request->GetURL().ToString();
