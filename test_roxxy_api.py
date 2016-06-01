@@ -14,8 +14,8 @@ def pytest_generate_tests(metafunc):
 class TestRoxxyAPI:
     
     params = {
-        #'test_httpbin_status_code': [dict(code=401),dict(code=400),dict(code=403),dict(code=500),dict(code=200)],
-        #'test_httpbin_redirect': [dict(code=301),dict(code=302)],
+        'test_httpbin_status_code': [dict(code=401),dict(code=400),dict(code=403),dict(code=500),dict(code=200)],
+        'test_httpbin_redirect': [dict(code=301),dict(code=302)],
          'test_html_endpoint': [{}],
          'test_png_endpoint': [{}],
          'test_render_png': [{}],
@@ -38,6 +38,24 @@ class TestRoxxyAPI:
                     "png": png,
                 })
         return req
+    
+    def test_httpbin_status_code(self, code):
+        req = self.test_request("http://httpbin.org/status/%d" % code)
+        roxxy_response = json.loads(req.text)
+        # Assert that roxxy returns 200 as the request is complete
+        assert req.status_code == 200
+
+        # Assert that roxxy reports the correct response code from the website being rendered
+        assert roxxy_response['statusCode'] == code
+
+    def test_httpbin_redirect(self, code):
+        req = self.test_request("http://httpbin.org/status/%d" % code)
+        roxxy_response = json.loads(req.text)
+        # Assert that roxxy returns 200 as the request is complete
+        assert req.status_code == 200
+
+        # Assert that roxxy reports the correct response code from the website being rendered
+        assert roxxy_response['statusCode'] == 200
     
     def test_html_endpoint(self):
         # Test that when the png is requested that it gets rendered and sent back on the API as base64
@@ -91,7 +109,7 @@ class TestRoxxyAPI:
 #         req = self.test_request("http://doom.import.io/php/miscellaneous%20tools/header_reflector.php", user_agent=user_agent)
 #         req_json = json.loads(req.text)
 # 
-#         # Assert that splash return 200 as the request is complete
+#         # Assert that roxxy return 200 as the request is complete
 #         assert req.status_code == 200
 # 
 #         # search for the user agent in the content of the page

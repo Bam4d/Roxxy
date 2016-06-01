@@ -75,10 +75,7 @@ void RenderProxyHandlerImpl::HandleGet() {
 		requestType = STATUS;
 		LOG(INFO) << "STATUS page requested";
 	} else {
-		ResponseBuilder(downstream_)
-			.status(404, "NOT_FOUND")
-			.body("{\"message\": \"The endpoint you have requested does not exist\"}")
-			.sendWithEOM();
+		SendErrorResponse("The endpoint you have requested does not exist", 404, "NOT_FOUND");
 		return;
 	}
 
@@ -86,11 +83,7 @@ void RenderProxyHandlerImpl::HandleGet() {
 		this->url = getUrl;
 		browserPool_->StartBrowserSession(this);
 	} else {
-		ResponseBuilder(downstream_)
-			.status(400, "BAD_REQUEST")
-			.body("{\"message\": \"Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A\"}")
-			.closeConnection()
-			.sendWithEOM();
+		SendErrorResponse("Url parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A", 400, "BAD_REQUEST");
 	}
 }
 
@@ -117,11 +110,7 @@ void RenderProxyHandlerImpl::HandlePost() {
 
 		browserPool_->StartBrowserSession(this);
 	} else {
-		ResponseBuilder(downstream_)
-			.status(400, "BAD_REQUEST")
-			.body("{\"message\": \"Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A\"}")
-			.closeConnection()
-			.sendWithEOM();
+		SendErrorResponse("Url get parameter must be set, for example http://localhost:8055?url=http%3A%2F%2Fwww.google.com%0A", 400, "BAD_REQUEST");
 	}
 }
 
@@ -130,11 +119,7 @@ void RenderProxyHandlerImpl::onEOM() noexcept {
 
 	// If we did not assign a browser to this request, then we do not handle it currently
 	if(!hasAssignedBrowser_) {
-		ResponseBuilder(downstream_)
-					.status(420, "NO_FREE_BROWSERS")
-					.body("{\"message\": \"No browsers free currently, please wait and try again.\"}")
-					.closeConnection()
-					.sendWithEOM();
+		SendErrorResponse("No browsers free currently, please wait and try again.", 420, "NO_FREE_BROWSERS");
 		return;
 	}
 
@@ -149,21 +134,13 @@ void RenderProxyHandlerImpl::onEOM() noexcept {
 				break;
 			default:
 				LOG(INFO) << "Request error";
-				ResponseBuilder(downstream_)
-					.status(405, "METHOD_NOT_ALLOWED")
-					.body("Cannot process request.")
-					.closeConnection()
-					.sendWithEOM();
+				SendErrorResponse("Only GET and POST are supported", 405, "METHOD_NOT_ALLOWED");
 				break;
 		}
 
 	} catch(...) {
 		LOG(INFO) << "Request error";
-		ResponseBuilder(downstream_)
-			.status(400, "BAD_REQUEST")
-			.body("Cannot process request.")
-			.closeConnection()
-			.sendWithEOM();
+		SendErrorResponse("Cannot process request", 400, "BAD_REQUEST");
 	}
 
 }
@@ -205,7 +182,7 @@ void RenderProxyHandlerImpl::PageRenderCompleted(BrowserSession* browserSession)
 			case RequestType::CUSTOM:
 			{
 				LOG(INFO)<<"Building custom response";
-				dynamic response = dynamic::object;
+				dynamic response = dynamic::object();
 
 				//LOG(INFO)<<"Building custom response"<<browserSession->htmlContent;
 				response["html"] = browserSession->htmlContent;
@@ -213,7 +190,6 @@ void RenderProxyHandlerImpl::PageRenderCompleted(BrowserSession* browserSession)
 
 				if(browserSession->pngRequested) {
 					response["png"] = proxygen::base64Encode(folly::ByteRange(reinterpret_cast<const unsigned char*>(browserSession->pngBuffer.buffer), browserSession->pngBuffer.size));
-					//response["png"] = BufferUtils::Base64Encode(reinterpret_cast<const char*>(browserSession->pngBuffer.buffer), browserSession->pngBuffer.size);
 				}
 
 				SendCustomResponse(response);
@@ -226,8 +202,12 @@ void RenderProxyHandlerImpl::PageRenderCompleted(BrowserSession* browserSession)
 		}
 }
 
-void RenderProxyHandlerImpl::SendErrorResponse(std::string message, int statusCode) {
-
+void RenderProxyHandlerImpl::SendErrorResponse(std::string message, int statusCode, std::string statusMessage) {
+	ResponseBuilder(downstream_)
+			.status(statusCode, statusMessage)
+			.body("{\"message\": \"" + message + "\"}")
+			.closeConnection()
+			.sendWithEOM();
 }
 
 void RenderProxyHandlerImpl::SendCustomResponse(dynamic jsonResponse) {

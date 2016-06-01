@@ -27,6 +27,9 @@ public:
 			const std::string());
 	MOCK_METHOD0(GetRequestType,
 			const RequestType());
+	MOCK_METHOD3(SendErrorResponse,
+			void(std::string message, int statusCode, std::string statusMessage));
+
 
 	// Fake these methods
 	virtual void onRequest(std::unique_ptr<proxygen::HTTPMessage> request) noexcept override {}
@@ -35,6 +38,7 @@ public:
 	virtual void onUpgrade(proxygen::UpgradeProtocol proto) noexcept override {}
 	virtual void onError(proxygen::ProxygenError err) noexcept override {}
 	virtual void requestComplete() noexcept override {}
+
 
 };
 
@@ -100,6 +104,10 @@ class MockCefBrowserHandler : public CefBrowserHandler {
       CefRefPtr<CefLifeSpanHandler>());
   MOCK_METHOD0(GetLoadHandler,
       CefRefPtr<CefLoadHandler>());
+  MOCK_METHOD0(GetJSDialogHandler,
+  	  CefRefPtr<CefJSDialogHandler>());
+  MOCK_METHOD0(GetRequestHandler,
+    	  CefRefPtr<CefRequestHandler>());
   MOCK_METHOD1(ResetBrowser,
       void(CefRefPtr<CefBrowser> browser));
   MOCK_METHOD2(StartBrowserSession,
@@ -117,17 +125,25 @@ class MockCefBrowserHandler : public CefBrowserHandler {
   MOCK_METHOD1(OnBeforeClose,
       void(CefRefPtr<CefBrowser> browser));
   MOCK_METHOD4(OnLoadingStateChange,
-      void(CefRefPtr<CefBrowser> browser, 			bool isLoading, 			bool canGoBack, 			bool canGoForward));
+      void(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward));
   MOCK_METHOD5(OnLoadError,
-      void(CefRefPtr<CefBrowser> browser, 			CefRefPtr<CefFrame> frame, ErrorCode errorCode, 	const CefString& errorText, const CefString& failedUrl));
+      void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl));
   MOCK_METHOD2(OnLoadStart,
-      void(CefRefPtr<CefBrowser> browser, 			CefRefPtr<CefFrame> frame));
+      void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame));
   MOCK_METHOD3(OnLoadEnd,
-      void(CefRefPtr<CefBrowser> browser, 			CefRefPtr<CefFrame> frame, int httpStatusCode));
+      void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode));
   MOCK_METHOD6(OnPaint,
       void(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height));
   MOCK_METHOD3(OnProcessMessageReceived,
-      bool(CefRefPtr<CefBrowser> browser, 	 CefProcessId source_process, 	 CefRefPtr<CefProcessMessage> message));
+      bool(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message));
+  MOCK_METHOD8(OnJSDialog,
+		  bool(CefRefPtr<CefBrowser> browser, const CefString& origin_url, const CefString& accept_lang, JSDialogType dialog_type, const CefString& message_text, const CefString& default_prompt_text, CefRefPtr<CefJSDialogCallback> callback, bool& suppress_message));
+  MOCK_METHOD4(OnBeforeResourceLoad,
+		  ReturnValue(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback));
+  MOCK_METHOD4(OnResourceRedirect,
+		  void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefString& new_url));
+  MOCK_METHOD4(OnResourceResponse,
+		  bool(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response));
 
   // Stop the compiler complaining because this implements some pure virtual functions that won't be used in the tests
   IMPLEMENT_REFCOUNTING(MockCefBrowserHandler)

@@ -75,7 +75,7 @@ private:
 
 	void HandlePost();
 
-	void SendErrorResponse(std::string message, int statusCode) override;
+	void SendErrorResponse(std::string message, int statusCode, std::string statusMessage) override;
 
 	void SendHtmlResponse(std::string response_data) override;
 

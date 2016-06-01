@@ -63,7 +63,7 @@ model {
     	roxxyExecutable {
             if (toolChain in Gcc) {
                 cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
-                linker.args "-lglog", "-ldouble-conversion", "-lpng" ,"-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
+                linker.args "-lproxygenlib", "-lcrypto", "-lglog", "-ldouble-conversion", "-lpng" ,"-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
             }
             cppCompiler.define "ROXXY_BUILD"
             
@@ -74,7 +74,7 @@ model {
     	roxxyTestGoogleTestExe {
 		    if (toolChain in Gcc) {
 	            cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
-	            linker.args "-lgmock", "-lgtest", "-lglog", "-ldouble-conversion", "-lpng", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
+	            linker.args "-lproxygenlib", "-lcrypto", "-lgmock", "-lgtest", "-lglog", "-ldouble-conversion", "-lpng", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
 	        }
 	        
 	    }

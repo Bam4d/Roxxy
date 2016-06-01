@@ -80,7 +80,7 @@ void CefBrowserHandlerImpl::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 	LOG(INFO)<<"Created browser, registering";
 	browserPool_->RegisterBrowser(browser);
 
-	setBrowserUrl(browser, "about:blank");
+	ResetBrowser(browser);
 
 	// Send a ping just to say hi to the renderer process
 	CefRefPtr<CefProcessMessage> msg= CefProcessMessage::Create("ping");
@@ -122,8 +122,10 @@ void CefBrowserHandlerImpl::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr
  */
 void CefBrowserHandlerImpl::ResetBrowser(CefRefPtr<CefBrowser> browser) {
 	// Set the browser url once it is loaded to the "about-blank" state
+	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
+	browserSession->pageUrl = "about:blank";
+	browserSession->isLoaded = false;
 	setBrowserUrl(browser, "about:blank");
-
 }
 
 void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
@@ -203,7 +205,14 @@ cef_return_value_t CefBrowserHandlerImpl::OnBeforeResourceLoad(
 	  CefRefPtr<CefFrame> frame,
 	  CefRefPtr<CefRequest> request,
 	  CefRefPtr<CefRequestCallback> callback) {
-	LOG(INFO)<<"before resource loaded "<<request->GetURL().ToString();
+	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
+
+	LOG(INFO) << "OnBefore "<<browserSession->pageUrl;
+	// Set the first requested url as the main page url
+	if(browserSession->pageUrl.compare("about:blank") == 0) {
+		browserSession->pageUrl = request->GetURL().ToString();
+		LOG(INFO) << "Setting browser session pageUrl "<<browserSession->pageUrl;
+	}
 
 	return RV_CONTINUE;
 }
@@ -213,7 +222,17 @@ void CefBrowserHandlerImpl::OnResourceRedirect(CefRefPtr<CefBrowser> browser,
 							  CefRefPtr<CefRequest> request,
 							  CefString& new_url) {
 
-	LOG(INFO)<<"Resource "<<request->GetURL().ToString()<<" redirected "<<new_url.ToString();
+	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
+
+	std::string requestUrl = request->GetURL().ToString();
+
+	// If we are redirecting the main url
+	if(browserSession->pageUrl.compare(requestUrl) == 0) {
+		// Set the final url to the new url
+		browserSession->pageUrl = new_url;
+	}
+
+	LOG(INFO)<<"Resource "<<request->GetURL().ToString()<<" redirected to "<<new_url.ToString();
 
 }
 
@@ -222,8 +241,19 @@ bool CefBrowserHandlerImpl::OnResourceResponse(CefRefPtr<CefBrowser> browser,
 							  CefRefPtr<CefRequest> request,
 							  CefRefPtr<CefResponse> response) {
 
-	LOG(INFO)<<"Resource "<<request->GetURL().ToString()<<" status code "<<response->GetStatus();
+	std::string requestUrl = request->GetURL().ToString();
 
+	LOG(INFO)<<"Resource "<<requestUrl<<" status code "<<response->GetStatus();
+
+	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
+
+	// If this is the response for the main url
+	if(browserSession->pageUrl.compare(requestUrl) == 0) {
+		// Set the statusCode of the session to this response
+		browserSession->statusCode = response->GetStatus();
+	}
+
+	return false;
 }
 
 

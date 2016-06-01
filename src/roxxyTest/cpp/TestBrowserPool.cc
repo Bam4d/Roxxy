@@ -110,7 +110,7 @@ TEST(BrowserPoolTest, TestAsyncAssignRelease) {
 
 	std::vector<std::thread> threads(NUM_THREADS);
 
-	EXPECT_CALL(*handler, ResetBrowser(_)).Times(NUM_REQUESTERS*NUM_THREADS);
+	EXPECT_CALL(*handler, ResetBrowser(_)).Times(AtLeast(NUM_BROWSERS));
 
 	for(int b = 0; b < NUM_BROWSERS; b++) {
 		browsers[b] = new MockCefBrowser();
@@ -124,11 +124,15 @@ TEST(BrowserPoolTest, TestAsyncAssignRelease) {
 			for(int r = 0; r < NUM_REQUESTERS; r++) {
 				MockRenderProxyHandler* renderProxyHandler = new MockRenderProxyHandler();
 				int browserId = pool->AssignBrowserSync(renderProxyHandler);
-				EXPECT_TRUE(browserId<NUM_BROWSERS);
-				EXPECT_EQ(pool->GetAssignedBrowserId(renderProxyHandler), browserId);
-				EXPECT_EQ(pool->GetAssignedRenderProxyHandler(browserId), renderProxyHandler);
 
-				pool->ReleaseBrowserSync(renderProxyHandler);
+				// If the browser id is -1 then there are no available browsers to process the request
+				if(browserId >= 0) {
+					EXPECT_TRUE(browserId<NUM_BROWSERS);
+					EXPECT_EQ(pool->GetAssignedBrowserId(renderProxyHandler), browserId);
+					EXPECT_EQ(pool->GetAssignedRenderProxyHandler(browserId), renderProxyHandler);
+
+					pool->ReleaseBrowserSync(renderProxyHandler);
+				}
 
 				delete renderProxyHandler;
 			}

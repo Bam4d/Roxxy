@@ -35,7 +35,7 @@ public:
 
 	virtual const RequestType GetRequestType() = 0;
 private:
-	virtual void SendErrorResponse(std::string message, int statusCode) = 0;
+	virtual void SendErrorResponse(std::string message, int statusCode, std::string statusMessage) = 0;
 
 	virtual void SendHtmlResponse(std::string responseData) = 0;
 

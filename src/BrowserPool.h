@@ -60,6 +60,11 @@ struct BrowserSession {
 	 * Whether or not the image of the page has been requested
 	 */
 	bool pngRequested;
+
+	/**
+	 * The final url of the web page, will be different if there are redirects
+	 */
+	std::string pageUrl;
 };
 
 /**
