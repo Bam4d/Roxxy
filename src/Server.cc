@@ -22,7 +22,7 @@ using folly::SocketAddress;
 using Protocol = HTTPServer::Protocol;
 
 
-Server::Server(int threads, int port, std::string ip, int numBrowsers) {
+Server::Server(int threads, int port, std::string ip, int numBrowsers, std::string resourceFilterFilename) {
 	this->port = port;
 	this->ip = ip;
 	this->threads = threads;
@@ -43,7 +43,7 @@ Server::Server(int threads, int port, std::string ip, int numBrowsers) {
 	options.enableContentCompression = true;
 	options.contentCompressionLevel = 4;
 	options.handlerFactories = RequestHandlerChain()
-			.addThen<RenderProxyHandlerFactory>(port, numBrowsers)
+			.addThen<RenderProxyHandlerFactory>(port, numBrowsers, resourceFilterFilename)
 			.build();
 
 	server = new HTTPServer(std::move(options));

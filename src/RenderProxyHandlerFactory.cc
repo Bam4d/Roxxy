@@ -14,11 +14,11 @@
 #include "RenderProxyHandlerImpl.h"
 
 
-RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port, int numBrowsers) {
+RenderProxyHandlerFactory::RenderProxyHandlerFactory(int port, int numBrowsers, std::string resourceFilterFilename) {
 	port_ = port;
 	LOG(INFO) << "ProxygenServer server starting....";
 
-	cefBrowserHandler_ = new CefBrowserHandlerImpl();
+	cefBrowserHandler_ = new CefBrowserHandlerImpl(resourceFilterFilename);
 
 	// Pool browsers here
 	browserPool_ = new BrowserPool(cefBrowserHandler_, numBrowsers);

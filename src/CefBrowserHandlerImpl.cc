@@ -22,12 +22,24 @@
 #include "RenderProxyHandler.h"
 #include "RenderPageImage.h"
 #include "SourceVisitor.h"
+#include "ResourceFilter.h"
 
-CefBrowserHandlerImpl::CefBrowserHandlerImpl() {
+CefBrowserHandlerImpl::CefBrowserHandlerImpl(std::string resourceFilterFilename) {
+
+	if(!resourceFilterFilename.empty()) {
+		resourceFilter_ = new ResourceFilter();
+		resourceFilter_->LoadFilterList(resourceFilterFilename);
+	} else {
+		resourceFilter_ = nullptr;
+	}
 }
 
 CefBrowserHandlerImpl::~CefBrowserHandlerImpl() {
 	LOG(INFO) << "killing browser handler";
+
+	if(resourceFilter_ != nullptr) {
+		delete resourceFilter_;
+	}
 }
 
 void CefBrowserHandlerImpl::Initialize(BrowserPool* browserPool) {
@@ -206,6 +218,10 @@ cef_return_value_t CefBrowserHandlerImpl::OnBeforeResourceLoad(
 	  CefRefPtr<CefRequest> request,
 	  CefRefPtr<CefRequestCallback> callback) {
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
+
+	if(resourceFilter_!= nullptr && resourceFilter_->ShouldFilterUrl(request->GetURL())) {
+		return RV_CANCEL;
+	}
 
 	// Set the first requested url as the main page url
 	if(browserSession->pageUrl.compare("about:blank") == 0) {

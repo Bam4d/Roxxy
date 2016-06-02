@@ -15,12 +15,12 @@
 #include "CefBrowserHandler.h"
 
 class BrowserPool;
-
+class ResourceFilter;
 
 class CefBrowserHandlerImpl : public CefBrowserHandler {
 
 public:
-	CefBrowserHandlerImpl();
+	CefBrowserHandlerImpl(std::string resourceFilterFilename);
 	virtual ~CefBrowserHandlerImpl();
 
 	// CefRenderHandler methods:
@@ -66,6 +66,8 @@ private:
 
 	// Controller for the browser pool
 	BrowserPool* browserPool_;
+
+	ResourceFilter* resourceFilter_;
 
 	virtual void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
 

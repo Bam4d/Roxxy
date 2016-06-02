@@ -22,7 +22,7 @@ using namespace proxygen;
 
 class RenderProxyHandlerFactory : public RequestHandlerFactory {
  public:
-	RenderProxyHandlerFactory(int port, int numBrowsers);
+	RenderProxyHandlerFactory(int port, int numBrowsers, std::string resourceFilterFilename);
 	virtual ~RenderProxyHandlerFactory();
 
 	// RequestHandlerFactory stuff
