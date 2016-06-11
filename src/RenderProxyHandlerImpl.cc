@@ -215,10 +215,9 @@ void RenderProxyHandlerImpl::SendCustomResponse(dynamic jsonResponse) {
 
 	std::string jsonResponseString = toJson(jsonResponse).toStdString();
 
-	LOG(INFO)<<"Sending custom response";
+	LOG(INFO)<<"Sending response";
 	bool result = evb->runInEventBaseThreadAndWait([&, jsonResponseString] () {
 
-			LOG(INFO)<<"Sending custom response"<<jsonResponseString;
 			ResponseBuilder(downstream_).status(200, "OK")
 					.body(jsonResponseString)
 					.header(HTTP_HEADER_CONTENT_TYPE, "application/json")
@@ -231,7 +230,7 @@ void RenderProxyHandlerImpl::SendCustomResponse(dynamic jsonResponse) {
 void RenderProxyHandlerImpl::SendImageResponse(const void* buffer, size_t contentLength, std::string contentType) {
 	DCHECK(evb != nullptr);
 
-
+	LOG(INFO)<<"Sending response";
 	bool result = evb->runInEventBaseThread([&, buffer, contentType, contentLength] () {
 		std::unique_ptr<folly::IOBuf> imageBody = std::unique_ptr<folly::IOBuf>(new folly::IOBuf(folly::IOBuf::COPY_BUFFER, (const void*) buffer, contentLength));
 
@@ -248,8 +247,7 @@ void RenderProxyHandlerImpl::SendImageResponse(const void* buffer, size_t conten
 void RenderProxyHandlerImpl::SendHtmlResponse(std::string responseContent) {
 	DCHECK(evb != nullptr);
 
-	LOG(INFO)<<"Sending html response";
-
+	LOG(INFO)<<"Sending response";
 	bool result = evb->runInEventBaseThread([&, responseContent] () {
 		ResponseBuilder(downstream_).status(200, "OK")
 				.body(responseContent)

@@ -2,17 +2,24 @@ apply plugin: 'cpp'
 apply plugin: 'google-test'
 
 def cefResourcePath = file("ceflib").absolutePath
+def roxxyResourcePath = file("assets").absolutePath
 
 def cefAllResources = copySpec {
     from(cefResourcePath) {
         include "*"
-	include "locales/*"
+		include "locales/*"
+    }
+    from(roxxyResourcePath) {
+    	include "filters/*"
     }
 }
 
 def cefTestResources = copySpec {
     from(cefResourcePath) {
         include "libcef.so"
+    }
+    from(roxxyResourcePath) {
+    	include "filters/*"
     }
 }
 
@@ -63,7 +70,7 @@ model {
     	roxxyExecutable {
             if (toolChain in Gcc) {
                 cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
-                linker.args "-lproxygenlib", "-lcrypto", "-lglog", "-ldouble-conversion", "-lpng" ,"-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
+                linker.args "-lboost_regex", "-lboost_system", "-lboost_filesystem", "-lproxygenlib", "-lcrypto", "-lglog", "-ldouble-conversion", "-lpng" ,"-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
             }
             cppCompiler.define "ROXXY_BUILD"
             
@@ -74,7 +81,7 @@ model {
     	roxxyTestGoogleTestExe {
 		    if (toolChain in Gcc) {
 	            cppCompiler.args "-D__GXX_EXPERIMENTAL_CXX0X__", "-D__cplusplus=201103L", "-I"+cefResourcePath, "-O2", "-g3", "-Wall", "-c", "-fmessage-length=0", "-std=c++11", "-MMD", "-MP"
-	            linker.args "-lproxygenlib", "-lcrypto", "-lgmock", "-lgtest", "-lglog", "-ldouble-conversion", "-lpng", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
+	            linker.args "-lboost_regex", "-lboost_system", "-lboost_filesystem", "-lproxygenlib", "-lcrypto", "-lgmock", "-lgtest", "-lglog", "-ldouble-conversion", "-lpng", "-lpthread", "-lgflags", "-lproxygenhttpserver", "-lfolly", cefResourcePath+"/libcef.so", cefResourcePath+"/libcef_dll_wrapper.a"
 	        }
 	        
 	    }

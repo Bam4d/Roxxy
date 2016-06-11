@@ -12,7 +12,6 @@
 
 class BrowserPool;
 class RenderProxyHandlerImpl;
-class ResourceFilter;
 
 /**
  * Wrapper for the browser handler interface, can then mock this interface for testing

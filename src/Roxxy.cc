@@ -29,7 +29,7 @@ DEFINE_string(ip, "0.0.0.0", "IP/Hostname to bind to");
 DEFINE_int32(threads, 0, "Number of threads to listen on. Numbers <= 0 "
              "will use the number of cores on this machine.");
 DEFINE_int32(browsers, 10, "Number of threads to listen on. The default is 10");
-DEFINE_string(resource_filter, "", "file containing line-separated list of regular expressions to block resources");
+DEFINE_string(filters, "", "folder containing adblockplus filter file definitions");
 
 Roxxy::Roxxy() {
 }
@@ -85,7 +85,7 @@ int Roxxy::Run(int argc, char* argv[]) {
 
 	// Only start this on the browser process
 	if(!command_line->HasSwitch("type")) {
-		Server* server = new Server(FLAGS_threads, FLAGS_http_port, FLAGS_ip, FLAGS_browsers, FLAGS_resource_filter);
+		Server* server = new Server(FLAGS_threads, FLAGS_http_port, FLAGS_ip, FLAGS_browsers, FLAGS_filters);
 		server->StartServer();
 	}
 

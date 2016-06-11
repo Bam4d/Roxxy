@@ -13,7 +13,6 @@
  */
 #include "CefBrowserHandler.h"
 #include "RenderProxyHandlerImpl.h"
-#include "ResourceFilter.h"
 
 
 

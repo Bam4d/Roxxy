@@ -1,0 +1,23 @@
+request:
+
+{
+	"url": "http://doom.import.io",
+	"onLoadScript": "Specific script that calls the window.roxxy_loaded() function which will trigger the other scripts to run.",
+	"scripts": {
+		"script_name": "script that returns some stuff",
+		"script_name2": "script that returns some other stuff"
+	},
+	"png": true	
+}
+
+response:
+{
+	"requestedUrl": "http://doom.import.io",
+	"finalUrl": "http://doom.import.io/redirected",
+	"statusCode": 200,
+	"png": "AjHne973018cck==",
+	"scripts": {
+		"script_name": "results from script 1",
+		"script_name2": "results from script 2"
+	}
+}

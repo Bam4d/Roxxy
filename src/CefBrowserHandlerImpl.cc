@@ -24,14 +24,17 @@
 #include "SourceVisitor.h"
 #include "ResourceFilter.h"
 
-CefBrowserHandlerImpl::CefBrowserHandlerImpl(std::string resourceFilterFilename) {
 
-	if(!resourceFilterFilename.empty()) {
+CefBrowserHandlerImpl::CefBrowserHandlerImpl(std::string resourceFilterFolder) {
+
+	if(!resourceFilterFolder.empty()) {
 		resourceFilter_ = new ResourceFilter();
-		resourceFilter_->LoadFilterList(resourceFilterFilename);
+		resourceFilter_->LoadFilters(resourceFilterFolder);
 	} else {
 		resourceFilter_ = nullptr;
 	}
+
+	_hostRegex = boost::regex("^(?:https?://)?(?:[^@\\/\\n]+@)?(?:www\\.)?([^:/\\n]+)");
 }
 
 CefBrowserHandlerImpl::~CefBrowserHandlerImpl() {
@@ -136,6 +139,7 @@ void CefBrowserHandlerImpl::ResetBrowser(CefRefPtr<CefBrowser> browser) {
 	// Set the browser url once it is loaded to the "about-blank" state
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
 	browserSession->pageUrl = "about:blank";
+	browserSession->pageDomain = "";
 	browserSession->isLoaded = false;
 	setBrowserUrl(browser, "about:blank");
 }
@@ -155,7 +159,7 @@ void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, 
 			browserPool_->GetBrowserSessionById(browser->GetIdentifier())->isLoaded = true;
 
 			LOG(INFO)<< "Executing window.roxxy_loaded(); in browser: " << browser->GetIdentifier();
-			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; setTimeout(window.roxxy_loaded, 500);}", browser->GetMainFrame()->GetURL(),0);
+			browser->GetMainFrame()->ExecuteJavaScript("if(!window.cef_loaded) {window.cef_loaded = true; setTimeout(window.roxxy_loaded, 0);}", browser->GetMainFrame()->GetURL(),0);
 		}
 	}
 }
@@ -219,13 +223,23 @@ cef_return_value_t CefBrowserHandlerImpl::OnBeforeResourceLoad(
 	  CefRefPtr<CefRequestCallback> callback) {
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
 
-	if(resourceFilter_!= nullptr && resourceFilter_->ShouldFilterUrl(request->GetURL())) {
-		return RV_CANCEL;
-	}
+	bool isAboutBlank = browserSession->pageUrl.compare("about:blank") == 0;
 
+	if(resourceFilter_!= nullptr && !isAboutBlank) {
+		if(resourceFilter_->ShouldFilterUrl(request->GetURL(), browserSession->pageDomain)) {
+			LOG(INFO)<<"Resource "<<request->GetURL().ToString()<<" cancelled";
+			return RV_CANCEL;
+		}
+	}
 	// Set the first requested url as the main page url
-	if(browserSession->pageUrl.compare("about:blank") == 0) {
+	if (isAboutBlank) {
 		browserSession->pageUrl = request->GetURL().ToString();
+
+		boost::match_results<string::const_iterator> what;
+		if( boost::regex_search( browserSession->pageUrl, what, _hostRegex ) ) {
+			browserSession->pageDomain = std::string(what[1].first,what[1].second);
+		}
+
 		LOG(INFO) << "Setting browser session pageUrl "<<browserSession->pageUrl;
 	}
 

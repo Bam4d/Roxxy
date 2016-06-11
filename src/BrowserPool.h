@@ -65,6 +65,12 @@ struct BrowserSession {
 	 * The final url of the web page, will be different if there are redirects
 	 */
 	std::string pageUrl;
+
+
+	/**
+	 * The domain of the pageUrl
+	 */
+	std::string pageDomain;
 };
 
 /**

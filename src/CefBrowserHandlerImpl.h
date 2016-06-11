@@ -11,6 +11,7 @@
 #include "include/cef_client.h"
 #include <list>
 #include <mutex>
+#include "boost/regex.hpp"
 
 #include "CefBrowserHandler.h"
 
@@ -68,6 +69,10 @@ private:
 	BrowserPool* browserPool_;
 
 	ResourceFilter* resourceFilter_;
+
+	// regular expression for extracting hostnames
+	boost::regex _hostRegex;
+
 
 	virtual void setBrowserUrl(CefRefPtr<CefBrowser> browser, const CefString& url);
 

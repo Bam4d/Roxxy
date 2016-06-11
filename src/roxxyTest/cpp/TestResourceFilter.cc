@@ -7,7 +7,10 @@
 
 #include <gtest/gtest.h>
 #include <vector>
-#include <boost/regex.hpp>
+#include <unistd.h>
+#include <limits.h>
+
+#include "boost/filesystem/operations.hpp"
 
 #include "../../ResourceFilter.h"
 
@@ -15,28 +18,22 @@ TEST(ResourceFilterTest, TestFilter) {
 
 	ResourceFilter filter;
 
-	filter.AddRegexToFilter("https?://\\w+\\.adservice\\.com");
+	char buff[PATH_MAX];
+	ssize_t len = ::readlink("/proc/self/exe", buff, sizeof(buff)-1);
+	if (len != -1) {
+	  buff[len] = '\0';
+	  std::string current_dir(buff);
+	  current_dir = path(current_dir).remove_filename().string();
+	  filter.LoadFilters(current_dir+"/filters");
+	}
 
-	EXPECT_EQ(filter.ShouldFilterUrl("http://test.adservice.com"), true);
+	EXPECT_EQ(filter.ShouldFilterUrl("http://test.adservice.com/thing.swf?1&clicktag=ABhe8576", "google.com"), true);
 
-	EXPECT_EQ(filter.ShouldFilterUrl("https://secure.adservice.com/v3/blah/script.js"), true);
+	EXPECT_EQ(filter.ShouldFilterUrl("http://test.adservice.com/antiadblockmsg.html", "google.com"), true);
 
-	EXPECT_EQ(filter.ShouldFilterUrl("http://import.io"), false);
+	EXPECT_EQ(filter.ShouldFilterUrl("http://import.io", "google.com"), false);
 
-}
-
-/**
- * Test that if the filter file has a bad regular expression that we just ignore it
- */
-TEST(ResourceFilterTest, TestBadRegex) {
-
-	ResourceFilter filter;
-	filter.AddRegexToFilter("https?://\\w+\\.adse)rvice\\.com");
-
-	EXPECT_EQ(filter.ShouldFilterUrl("http://test.adservice.com"), false);
-
-	EXPECT_EQ(filter.ShouldFilterUrl("https://secure.adservice.com/v3/blah/script.js"), false);
-
-	EXPECT_EQ(filter.ShouldFilterUrl("http://import.io"), false);
+	EXPECT_EQ(filter.ShouldFilterUrl("http://google.com", "google.com"), false);
 
 }
+
