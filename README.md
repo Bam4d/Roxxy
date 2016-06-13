@@ -72,7 +72,7 @@ Send a url to roxxy using it's REST GET API
 
 Get the html and the png in one go:
 ```
-> curl -vvv -XPOST localhost:8055 -d '{"url":"httpbin.org/status/200", "png": True}'
+> curl -vvv -XPOST localhost:8055 -d '{"url":"http://www.google.com", "png": True}'
 ```
 
 .. this endpoint will also serve other options in the future such as scripts etc.
