@@ -6,7 +6,7 @@ Currently building and tested on ubuntu 14.04 x64
 
 ## Why?
 
-Imagine you want to write a program that looks at websites and collect some information such as the images or a list of data points on teh page such as the prices... easy right? 
+Imagine you want to write a program that looks at websites and collect some information such as the images or a list of data points on a page such as the prices... easy right? 
 
 Not quite...
 
@@ -68,10 +68,19 @@ Send a url to roxxy using it's REST GET API
 > curl localhost:8055/png?url=http://www.google.com
 ```
 
+### Custom request endpoint:
+
+Get the html and the png in one go:
+```
+> curl -vvv -XPOST localhost:8055 -d '{"url":"http://www.google.com", "png": True}'
+```
+
+.. this endpoint will also serve other options in the future such as scripts etc.
+
 ## TODO
 
 * More unit tests
-* Functional testing using python
+* More Functional testing using python
 * Could make this scriptable, so scripts can be run on the browser?
 * Transparent proxy mode
 * Docker image

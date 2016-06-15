@@ -19,7 +19,7 @@ class TestRoxxyAPI:
          'test_html_endpoint': [{}],
          'test_png_endpoint': [{}],
          'test_render_png': [{}],
-        #'test_visual_features_flag': [dict(visualFeatures=True),dict(visualFeatures=False)],
+        
         #'test_user_agent': [dict(user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4")],
         #'test_response_time': [dict(response_time=1, resource_timeout=2, error_reason=None),
         #                    dict(response_time=2, resource_timeout=1, error_reason="network5")],
