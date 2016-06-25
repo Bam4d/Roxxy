@@ -30,9 +30,11 @@ RUN sudo apt-get install -yq \
     libevent-dev \
     libgoogle-glog-dev \
     wget \
+    python-pip \
     zip \
     unzip \
-    ninja-build
+    ninja-build \
+    libpng-dev
     
 # Get the pre-built cef binary
 RUN wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz
@@ -41,26 +43,27 @@ RUN tar -xvf ceflib.tar.gz
 # Clone and install google test
 RUN git clone https://github.com/google/googletest.git
 WORKDIR /home/roxxy/googletest
-RUN git checkout tags/release-1.7.0
 RUN cmake .
-RUN sudo make
-RUN sudo cp -a include/gtest /usr/include && \ 
-	sudo cp -a libgtest_main.a libgtest.a /usr/lib/
+RUN make
+RUN sudo cp -a googletest/include/gtest /usr/include && \ 
+	sudo cp -a googlemock/gtest/libgtest_main.a googlemock/gtest/libgtest.a /usr/lib/
+RUN sudo cp -a googlemock/include/gmock /usr/include && \ 
+	sudo cp -a googlemock/libgmock_main.a googlemock/libgmock.a /usr/lib/
 
 # Clone and install proxygen
 WORKDIR /home/roxxy/
 RUN git clone https://github.com/facebook/proxygen.git
 WORKDIR /home/roxxy/proxygen/proxygen
-RUN git checkout tags/v0.32.0
 RUN ./deps.sh && ./reinstall.sh
 
 # Get the gradle dependencies
 WORKDIR /home/roxxy/
-
 RUN git clone https://chromium.googlesource.com/external/gyp.git
 WORKDIR /home/roxxy/gyp
+RUN sudo pip install setuptools
 RUN sudo python setup.py install
 
+WORKDIR /home/roxxy/
 RUN ./build.sh
 
 EXEC /out/Release/Roxxy

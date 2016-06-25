@@ -26,19 +26,22 @@ sudo apt-get install -yq \
     libevent-dev \
     libgoogle-glog-dev \
     wget \
+    python-pip \
     zip \
     unzip \
-    ninja-build
+    ninja-build \
+    libpng-dev
 
 echo "Installing gtest"
-# Clone the gtest repo from github.
+# Clone and install google test
 git clone https://github.com/google/googletest.git
 cd googletest
-git checkout tags/release-1.7.0
 cmake .
-sudo make
-sudo cp -a include/gtest /usr/include
-sudo cp -a libgtest_main.a libgtest.a /usr/lib/
+make
+sudo cp -a googletest/include/gtest /usr/include && \ 
+	sudo cp -a googlemock/gtest/libgtest_main.a googlemock/gtest/libgtest.a /usr/lib/
+sudo cp -a googlemock/include/gmock /usr/include && \ 
+	sudo cp -a googlemock/libgmock_main.a googlemock/libgmock.a /usr/lib/
 
 cd ../
 
@@ -46,7 +49,6 @@ echo "Installing proxygen"
 # Clone the proxygen repo from github.
 git clone https://github.com/facebook/proxygen.git
 cd proxygen/proxygen
-git checkout tags/v0.32.0
 
 echo "Installing proxygen.."
 # build proxygen stuff
@@ -55,6 +57,7 @@ echo "Installing proxygen.."
 echo "Installing gyp"
 git clone https://chromium.googlesource.com/external/gyp.git
 cd gyp
+sudo pip install setuptools
 sudo python setup.py install
 
 
