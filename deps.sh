@@ -25,31 +25,37 @@ sudo apt-get install -yq \
     autoconf-archive \
     libevent-dev \
     libgoogle-glog-dev \
-    wget
+    wget \
+    zip \
+    unzip \
+    ninja-build
 
 echo "Installing gtest"
 # Clone the gtest repo from github.
 git clone https://github.com/google/googletest.git
-git checkout tags/release-1.7.0
 cd googletest
+git checkout tags/release-1.7.0
 cmake .
-sudo make install
+sudo make
+sudo cp -a include/gtest /usr/include
+sudo cp -a libgtest_main.a libgtest.a /usr/lib/
 
 cd ../
 
 echo "Installing proxygen"
 # Clone the proxygen repo from github.
 git clone https://github.com/facebook/proxygen.git
-git checkout tags/v0.32.0
 cd proxygen/proxygen
+git checkout tags/v0.32.0
 
 echo "Installing proxygen.."
 # build proxygen stuff
 ./deps.sh && ./reinstall.sh
 
-cd ../../
-echo "Installing gradle..."
-./gradlew
+echo "Installing gyp"
+git clone https://chromium.googlesource.com/external/gyp.git
+cd gyp
+sudo python setup.py install
 
-echo "Building Roxxy.."
-gradlew build
+
+echo "Dependencies installed!!"

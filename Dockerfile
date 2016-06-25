@@ -3,18 +3,17 @@ FROM ubuntu:14.04
 # Generate the working directory for installing Roxxy
 WORKDIR /home/roxxy
 
-# Copy the source and the gradle files
-COPY gradlew gradlew
-COPY gradlew.bat gradlew.bat
-COPY build.gradle build.gradle
+COPY build.gyp build.gyp
+COPY build.sh build.sh
 
+COPY assets/ assets/
 COPY src/ src/
 
 # Install common dependencies
 RUN sudo apt-get update
 RUN sudo apt-get install -yq git \
  	curl \
- 	cmake 
+ 	cmake \
  	build-essential
  
 RUN sudo apt-get install -yq \
@@ -30,29 +29,38 @@ RUN sudo apt-get install -yq \
     autoconf-archive \
     libevent-dev \
     libgoogle-glog-dev \
-    wget
+    wget \
+    zip \
+    unzip \
+    ninja-build
     
 # Get the pre-built cef binary
-RUN wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz ceflib.tar.gz
+RUN wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz
 RUN tar -xvf ceflib.tar.gz
 
 # Clone and install google test
 RUN git clone https://github.com/google/googletest.git
-RUN git checkout tags/release-1.7.0
 WORKDIR /home/roxxy/googletest
+RUN git checkout tags/release-1.7.0
 RUN cmake .
-RUN sudo make install
+RUN sudo make
+RUN sudo cp -a include/gtest /usr/include && \ 
+	sudo cp -a libgtest_main.a libgtest.a /usr/lib/
 
 # Clone and install proxygen
 WORKDIR /home/roxxy/
 RUN git clone https://github.com/facebook/proxygen.git
-RUN git checkout tags/v0.32.0
 WORKDIR /home/roxxy/proxygen/proxygen
+RUN git checkout tags/v0.32.0
 RUN ./deps.sh && ./reinstall.sh
 
 # Get the gradle dependencies
 WORKDIR /home/roxxy/
-RUN ./gradlew
 
+RUN git clone https://chromium.googlesource.com/external/gyp.git
+WORKDIR /home/roxxy/gyp
+RUN sudo python setup.py install
 
-RUN gradlew build
+RUN ./build.sh
+
+EXEC /out/Release/Roxxy

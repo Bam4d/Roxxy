@@ -29,7 +29,7 @@ In theory on large servers, the browser pool could consist of several hundred br
 
 ## Building
 
-Roxxy uses gradle to build, but we first need to download some dependencies.
+Roxxy uses gyp and ninja to build, but we first need to download some dependencies.
 
 Firstly download the dependencies by running:
 
@@ -42,37 +42,43 @@ call a tedious relative ... this takes ages...
 You can now build using:
 
 ```
-gradle build
+./build.sh
 ```
 
-The executables will be located in `build/exe/roxxy` and `build/exe/roxxy` for debug and release versions
+The executables will be located in `out/Release`
 
 ## Usage
 
 1. Start roxxy
 
 ```
-> ./roxxy 
+./Roxxy 
+```
+
+2. Run tests
+
+```
+./Test
 ```
 
 Send a url to roxxy using it's REST GET API
 ### Getting rendered HTML
 
 ```
-> curl localhost:8055/html?url=http://www.google.com
+curl localhost:8055/html?url=http://www.google.com
 ```
 
 ### Getting rendered page image PNG
 
 ```
-> curl localhost:8055/png?url=http://www.google.com
+curl localhost:8055/png?url=http://www.google.com
 ```
 
 ### Custom request endpoint:
 
 Get the html and the png in one go:
 ```
-> curl -vvv -XPOST localhost:8055 -d '{"url":"http://www.google.com", "png": True}'
+curl -vvv -XPOST localhost:8055 -d '{"url":"http://www.google.com", "png": True}'
 ```
 
 .. this endpoint will also serve other options in the future such as scripts etc.
@@ -83,7 +89,6 @@ Get the html and the png in one go:
 * More Functional testing using python
 * Could make this scriptable, so scripts can be run on the browser?
 * Transparent proxy mode
-* Docker image
 
 
 ## Commercially
