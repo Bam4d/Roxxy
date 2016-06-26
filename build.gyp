@@ -29,8 +29,6 @@
             "-lcef_dll_wrapper"
         ],
         "cflags": [
-            "-D__GXX_EXPERIMENTAL_CXX0X__",
-            "-D__cplusplus=201103L",
             "-Wall",
             "-c",
             "-fmessage-length=0",
@@ -47,10 +45,7 @@
             "Debug": {
                 "cflags": [
                     "-g3"
-                ],
-                "defines": [
-	                "DEBUG"
-	            ]
+                ]
             }
         }
     },

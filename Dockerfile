@@ -43,6 +43,7 @@ RUN tar -xvf ceflib.tar.gz
 # Clone and install google test
 RUN git clone https://github.com/google/googletest.git
 WORKDIR /home/roxxy/googletest
+RUN git checkout 0a439623f75c029912728d80cb7f1b8b48739ca4
 RUN cmake .
 RUN make
 RUN sudo cp -a googletest/include/gtest /usr/include && \ 
@@ -54,6 +55,7 @@ RUN sudo cp -a googlemock/include/gmock /usr/include && \
 WORKDIR /home/roxxy/
 RUN git clone https://github.com/facebook/proxygen.git
 WORKDIR /home/roxxy/proxygen/proxygen
+RUN git checkout 00612209fa827f1a6ad0dea498435a9cfd449624
 RUN ./deps.sh && ./reinstall.sh
 
 # Get the gradle dependencies

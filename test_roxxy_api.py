@@ -16,9 +16,9 @@ class TestRoxxyAPI:
     params = {
         'test_httpbin_status_code': [dict(code=401),dict(code=400),dict(code=403),dict(code=500),dict(code=200)],
         'test_httpbin_redirect': [dict(code=301),dict(code=302)],
-         'test_html_endpoint': [{}],
-         'test_png_endpoint': [{}],
-         'test_render_png': [{}],
+        'test_html_endpoint': [{}],
+        'test_png_endpoint': [{}],
+        'test_render_png': [{}],
         
         #'test_user_agent': [dict(user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4")],
         #'test_response_time': [dict(response_time=1, resource_timeout=2, error_reason=None),

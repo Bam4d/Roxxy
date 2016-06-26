@@ -36,6 +36,7 @@ echo "Installing gtest"
 # Clone and install google test
 git clone https://github.com/google/googletest.git
 cd googletest
+git checkout 0a439623f75c029912728d80cb7f1b8b48739ca4
 cmake .
 make
 sudo cp -a googletest/include/gtest /usr/include && \ 
@@ -49,6 +50,7 @@ echo "Installing proxygen"
 # Clone the proxygen repo from github.
 git clone https://github.com/facebook/proxygen.git
 cd proxygen/proxygen
+git checkout 00612209fa827f1a6ad0dea498435a9cfd449624
 
 echo "Installing proxygen.."
 # build proxygen stuff

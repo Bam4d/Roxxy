@@ -136,12 +136,20 @@ void CefBrowserHandlerImpl::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr
  * End the session with the browser.
  */
 void CefBrowserHandlerImpl::ResetBrowser(CefRefPtr<CefBrowser> browser) {
+
+	if (!CefCurrentlyOn(TID_UI)) {
+			// Execute on the UI thread.
+			CefPostTask(TID_UI,
+					base::Bind(&CefBrowserHandlerImpl::ResetBrowser, this, browser));
+			return;
+	}
 	// Set the browser url once it is loaded to the "about-blank" state
+	setBrowserUrl(browser, "about:blank");
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
 	browserSession->pageUrl = "about:blank";
 	browserSession->pageDomain = "";
 	browserSession->isLoaded = false;
-	setBrowserUrl(browser, "about:blank");
+
 }
 
 void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
@@ -222,6 +230,10 @@ cef_return_value_t CefBrowserHandlerImpl::OnBeforeResourceLoad(
 	  CefRefPtr<CefRequest> request,
 	  CefRefPtr<CefRequestCallback> callback) {
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
+
+	if(browserSession->isLoaded) {
+		return RV_CANCEL;
+	}
 
 	bool isAboutBlank = browserSession->pageUrl.compare("about:blank") == 0;
 

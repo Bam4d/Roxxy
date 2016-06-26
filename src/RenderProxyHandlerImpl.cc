@@ -95,7 +95,7 @@ void RenderProxyHandlerImpl::HandlePost() {
 
 	dynamic jsonRequest = BufferUtils::GetJson(std::move(requestBody_));
 
-	std::string getUrl = jsonRequest["url"].asString().toStdString();
+	std::string getUrl = jsonRequest["url"].asString();
 
 	if(!getUrl.empty() && !boost::starts_with(getUrl, "about:") && !boost::starts_with(getUrl, "chrome://")){
 		this->url = getUrl;
@@ -213,7 +213,7 @@ void RenderProxyHandlerImpl::SendErrorResponse(std::string message, int statusCo
 void RenderProxyHandlerImpl::SendCustomResponse(dynamic jsonResponse) {
 	DCHECK(evb != nullptr);
 
-	std::string jsonResponseString = toJson(jsonResponse).toStdString();
+	std::string jsonResponseString = toJson(jsonResponse);
 
 	LOG(INFO)<<"Sending response";
 	bool result = evb->runInEventBaseThreadAndWait([&, jsonResponseString] () {
