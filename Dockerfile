@@ -15,7 +15,7 @@ RUN sudo apt-get install -yq git \
  	curl \
  	cmake \
  	build-essential
- 
+
 RUN sudo apt-get install -yq \
     flex \
     bison \
@@ -34,8 +34,18 @@ RUN sudo apt-get install -yq \
     zip \
     unzip \
     ninja-build \
-    libpng-dev
-    
+    libpng-dev \
+    libfontconfig \
+    libfreetype6 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libnss3 \
+    libnspr4 \
+    libgconf-2-4 
+
+
+
 # Get the pre-built cef binary
 RUN wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz
 RUN tar -xvf ceflib.tar.gz
@@ -46,9 +56,9 @@ WORKDIR /home/roxxy/googletest
 RUN git checkout 0a439623f75c029912728d80cb7f1b8b48739ca4
 RUN cmake .
 RUN make
-RUN sudo cp -a googletest/include/gtest /usr/include && \ 
+RUN sudo cp -a googletest/include/gtest /usr/include && \
 	sudo cp -a googlemock/gtest/libgtest_main.a googlemock/gtest/libgtest.a /usr/lib/
-RUN sudo cp -a googlemock/include/gmock /usr/include && \ 
+RUN sudo cp -a googlemock/include/gmock /usr/include && \
 	sudo cp -a googlemock/libgmock_main.a googlemock/libgmock.a /usr/lib/
 
 # Clone and install proxygen
