@@ -30,7 +30,26 @@ sudo apt-get install -yq \
     zip \
     unzip \
     ninja-build \
-    libpng-dev
+    libpng-dev \
+    libfontconfig \
+    libfreetype6 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libnss3 \
+    libnspr4 \
+    libgconf-2-4 \
+    libxi6 \
+    libxcursor1 \
+    libxfixes3 \
+    libxss1 \
+    libxcomposite1 \
+    libasound2 \
+    libxdamage1 \
+    libxtst6 \
+    libatk1.0-0 \
+    libxrandr2 \
+    libcups2
 
 echo "Installing gtest"
 # Clone and install google test
@@ -39,9 +58,9 @@ cd googletest
 git checkout 0a439623f75c029912728d80cb7f1b8b48739ca4
 cmake .
 make
-sudo cp -a googletest/include/gtest /usr/include && \ 
+sudo cp -a googletest/include/gtest /usr/include && \
 	sudo cp -a googlemock/gtest/libgtest_main.a googlemock/gtest/libgtest.a /usr/lib/
-sudo cp -a googlemock/include/gmock /usr/include && \ 
+sudo cp -a googlemock/include/gmock /usr/include && \
 	sudo cp -a googlemock/libgmock_main.a googlemock/libgmock.a /usr/lib/
 
 cd ../

@@ -42,9 +42,20 @@ RUN sudo apt-get install -yq \
     libpango-1.0-0 \
     libnss3 \
     libnspr4 \
-    libgconf-2-4 
+    libgconf-2-4 \
+    libxi6 \
+    libxcursor1 \
+    libxfixes3 \
+    libxss1 \
+    libxcomposite1 \
+    libasound2 \
+    libxdamage1 \
+    libxtst6 \
+    libatk1.0-0 \
+    libxrandr2 \
+    libcups2
 
-
+RUN sudo apt-get autoremove
 
 # Get the pre-built cef binary
 RUN wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz
@@ -78,4 +89,5 @@ RUN sudo python setup.py install
 WORKDIR /home/roxxy/
 RUN ./build.sh
 
-EXEC /out/Release/Roxxy
+WORKDIR out/Release/
+CMD ./Roxxy
