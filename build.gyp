@@ -10,8 +10,11 @@
             "ceflib"
         ],
         "library_dirs": [
-	    	"ceflib"
-	    ],
+            "ceflib"
+        ],
+        "ldflags": [
+            "-Wl,-R,."
+        ],
         "libraries": [
             "-lboost_regex",
             "-lboost_system",
@@ -61,36 +64,33 @@
             "target_name": "Test",
             "type": "executable",
             "sources": [
-            	"<!@(ls -1 src/roxxyTest/cpp/*.cc)"
+                "<!@(ls -1 src/roxxyTest/cpp/*.cc)"
             ],
             "libraries": [
-        		"-lgtest",
-        		"-lgmock"
-        	]
+                "-lgtest",
+                "-lgmock"
+            ]
         },
         {
-        	"target_name": "copy_roxxy_dependencies",
-        	"type": "none",
-        	"dependencies": [
-        		"Roxxy",
-        		"Test"
-        	],
-        	"copies": [
-        		{
-        			"destination": "<(PRODUCT_DIR)",
-        			"files": [
-        				"<!@(ls -1 ceflib/*.pak)",
-        				"<!@(ls -1 ceflib/*.dat)",
-        				"<!@(ls -1 ceflib/*.so)",
-        				"<!@(ls -1 ceflib/*.bin)",
-        				"assets/filters",
-        				"ceflib/locales"
-        			]
-        		}
-        	]
+            "target_name": "copy_roxxy_dependencies",
+            "type": "none",
+            "dependencies": [
+                "Roxxy",
+                "Test"
+            ],
+            "copies": [
+                {
+                    "destination": "<(PRODUCT_DIR)",
+                    "files": [
+                        "<!@(ls -1 ceflib/*.pak)",
+                        "<!@(ls -1 ceflib/*.dat)",
+                        "<!@(ls -1 ceflib/*.so)",
+                        "<!@(ls -1 ceflib/*.bin)",
+                        "assets/filters",
+                        "ceflib/locales"
+                    ]
+                }
+            ]
         }
-        
-        
     ]
-    
 }
