@@ -7,10 +7,11 @@
             "<!@(ls -1 src/utils/*.cc)"
         ],
         "include_dirs": [
-            "ceflib"
+            "cef_binary_3.2743.1442.ge29124d_linux64"
         ],
         "library_dirs": [
-            "ceflib"
+            "cef_binary_3.2743.1442.ge29124d_linux64/Release",
+            "cef_binary_3.2743.1442.ge29124d_linux64/libcef_dll_wrapper"
         ],
         "ldflags": [
             "-Wl,-R,."
@@ -82,12 +83,12 @@
                 {
                     "destination": "<(PRODUCT_DIR)",
                     "files": [
-                        "<!@(ls -1 ceflib/*.pak)",
-                        "<!@(ls -1 ceflib/*.dat)",
-                        "<!@(ls -1 ceflib/*.so)",
-                        "<!@(ls -1 ceflib/*.bin)",
+                        "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Resources/*.pak)",
+                        "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Resources/*.dat)",
+                        "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Release/*.so)",
+                        "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Release/*.bin)",
                         "assets/filters",
-                        "ceflib/locales"
+                        "cef_binary_3.2743.1442.ge29124d_linux64/Resources/locales"
                     ]
                 }
             ]

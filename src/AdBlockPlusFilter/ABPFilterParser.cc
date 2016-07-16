@@ -88,12 +88,10 @@ bool getFingerprint(char *buffer, const char *input) {
   }
   int size = 0;
   const char *p = input;
-  const char *start = input;
   while (*p != '\0') {
     if (!isFingerprintChar(*p)) {
       size = 0;
       p++;
-      start = p;
       continue;
     }
     if (buffer) {

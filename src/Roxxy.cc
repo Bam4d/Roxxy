@@ -97,5 +97,6 @@ int Roxxy::Run(int argc, char* argv[]) {
 	LOG(INFO)<< "Shutting down";
 	// Shut down CEF.
 	CefShutdown();
+	return 0;
 }
 

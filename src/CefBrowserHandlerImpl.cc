@@ -181,7 +181,7 @@ void CefBrowserHandlerImpl::OnPageLoadExecuted(const CefString& htmlContent, int
 	browserPool_->GetAssignedRenderProxyHandler(browserId)->PageRenderCompleted(browserSession);
 }
 
-void CefBrowserHandlerImpl::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
+void CefBrowserHandlerImpl::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type) {
 }
 
 void CefBrowserHandlerImpl::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
@@ -209,13 +209,12 @@ void CefBrowserHandlerImpl::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementT
  * Handle any javascript dialogs that come from the page
  */
 bool CefBrowserHandlerImpl::OnJSDialog(CefRefPtr<CefBrowser> browser,
-		                          const CefString& origin_url,
-		                          const CefString& accept_lang,
-		                          JSDialogType dialog_type,
-		                          const CefString& message_text,
-		                          const CefString& default_prompt_text,
-		                          CefRefPtr<CefJSDialogCallback> callback,
-		                          bool& suppress_message) {
+		const CefString& origin_url,
+		JSDialogType dialog_type,
+		const CefString& message_text,
+		const CefString& default_prompt_text,
+		CefRefPtr<CefJSDialogCallback> callback,
+		bool& suppress_message) {
 	suppress_message = true;
 	LOG(INFO)<<"JS DIALOG"<<message_text.ToString();
 	return false;

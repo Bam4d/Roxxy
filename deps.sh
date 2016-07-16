@@ -1,55 +1,13 @@
 #!/bin/bash
 
-echo "Installing cef lib binaries"
-# Firstly pick up the compiled libs from s3!
-wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz ceflib.tar.gz
-tar -xvf ceflib.tar.gz
+CEFTAR="cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2"
 
-
-echo "Installing pxygen dependencies"
-# Install lib dependencies for proxygen
 sudo apt-get update
-sudo apt-get install -yq git
-sudo apt-get install -yq curl
-sudo apt-get install -yq cmake build-essential
-sudo apt-get install -yq \
-    flex \
-    bison \
-    libkrb5-dev \
-    libsasl2-dev \
-    libnuma-dev \
-    pkg-config \
-    libssl-dev \
-    libcap-dev \
-    gperf \
-    autoconf-archive \
-    libevent-dev \
-    libgoogle-glog-dev \
-    wget \
-    python-pip \
-    zip \
-    unzip \
-    ninja-build \
-    libpng-dev \
-    libfontconfig \
-    libfreetype6 \
-    libpangocairo-1.0-0 \
-    libcairo2 \
-    libpango-1.0-0 \
-    libnss3 \
-    libnspr4 \
-    libgconf-2-4 \
-    libxi6 \
-    libxcursor1 \
-    libxfixes3 \
-    libxss1 \
-    libxcomposite1 \
-    libasound2 \
-    libxdamage1 \
-    libxtst6 \
-    libatk1.0-0 \
-    libxrandr2 \
-    libcups2
+sudo apt-get install -yq 
+	git \
+	cmake \
+	build-essential \
+	python-pip
 
 echo "Installing gtest"
 # Clone and install google test
@@ -82,6 +40,48 @@ git clone https://chromium.googlesource.com/external/gyp.git
 cd gyp
 sudo pip install setuptools
 sudo python setup.py install
+
+echo "Installing cef lib binaries"
+# Firstly pick up the compiled libs from s3!
+if [ ! -f $CEFTAR ]; then
+    echo "Downloading cef build $CEFTAR"
+    wget "http://opensource.spotify.com/cefbuilds/$CEFTAR" $CEFTAR
+fi
+
+tar -xvf $CEFTAR
+
+cd $CEFTAR
+cmake .
+cd libcev_dll_wrapper
+make 
+cd ../../
+
+echo "Installing CEF dependencies"
+sudo apt-get install -yq \
+    python-pip \
+    ninja-build \
+    libpng-dev \
+    libfontconfig \
+    libfreetype6 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libnss3 \
+    libnspr4 \
+    libgconf-2-4 \
+    libxi6 \
+    libxcursor1 \
+    libxfixes3 \
+    libxss1 \
+    libxcomposite1 \
+    libasound2 \
+    libxdamage1 \
+    libxtst6 \
+    libatk1.0-0 \
+    libxrandr2 \
+    libcups2
+    
+sudo apt-get -yq autoremove 
 
 
 echo "Dependencies installed!!"
