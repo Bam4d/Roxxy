@@ -76,7 +76,6 @@ int Roxxy::Run(int argc, char* argv[]) {
 		return exit_code;
 	}
 
-	settings.no_sandbox = 1;
 	settings.windowless_rendering_enabled = 1;
 
 	LOG(INFO)<< "Initializing cef";

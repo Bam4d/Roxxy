@@ -61,7 +61,10 @@ RUN sudo apt-get install -yq \
 
 RUN sudo apt-get -yq autoremove
 
+# Get the pre-built cef binary
 WORKDIR /home/roxxy/
+RUN wget http://opensource.spotify.com/cefbuilds/cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2
+RUN tar -xvf cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2
 
 COPY build.gyp build.gyp
 COPY build.sh build.sh
@@ -69,16 +72,11 @@ COPY build.sh build.sh
 COPY assets/ assets/
 COPY src/ src/
 
-# Get the pre-built cef binary
-RUN wget http://opensource.spotify.com/cefbuilds/cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2
-RUN tar -xvf cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2
-
 WORKDIR /home/roxxy/cef_binary_3.2743.1442.ge29124d_linux64/ 
 RUN ls
 RUN cmake .
 WORKDIR /home/roxxy/cef_binary_3.2743.1442.ge29124d_linux64/libcef_dll_wrapper/
 RUN make 
-
 
 WORKDIR /home/roxxy/
 RUN ./build.sh

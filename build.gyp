@@ -83,7 +83,8 @@
                 {
                     "destination": "<(PRODUCT_DIR)",
                     "files": [
-                        "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Resources/*.pak)",
+                        "cef_binary_3.2743.1442.ge29124d_linux64/Release/chrome-sandbox",
+			"<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Resources/*.pak)",
                         "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Resources/*.dat)",
                         "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Release/*.so)",
                         "<!@(ls -1 cef_binary_3.2743.1442.ge29124d_linux64/Release/*.bin)",
