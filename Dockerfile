@@ -5,7 +5,8 @@ RUN sudo apt-get update
 RUN sudo apt-get install -yq \
 	git \
  	cmake \
- 	build-essential
+ 	build-essential \
+	python-pip
  	
 # Generate the working directory for installing Roxxy
 WORKDIR /home/roxxy
@@ -36,7 +37,6 @@ RUN sudo pip install setuptools
 RUN sudo python setup.py install
 
 RUN sudo apt-get install -yq \
-	python-pip \
     ninja-build \
     libpng-dev \
     libfontconfig \
@@ -61,6 +61,8 @@ RUN sudo apt-get install -yq \
 
 RUN sudo apt-get -yq autoremove
 
+WORKDIR /home/roxxy/
+
 COPY build.gyp build.gyp
 COPY build.sh build.sh
 
@@ -68,12 +70,13 @@ COPY assets/ assets/
 COPY src/ src/
 
 # Get the pre-built cef binary
-RUN wget http://opensource.spotify.com/cefbuilds/cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2 cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2
+RUN wget http://opensource.spotify.com/cefbuilds/cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2
 RUN tar -xvf cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2
 
-WORKDIR /home/roxxy/cef_binary_3.2743.1442.ge29124d_linux64 
+WORKDIR /home/roxxy/cef_binary_3.2743.1442.ge29124d_linux64/ 
+RUN ls
 RUN cmake .
-WORKDIR /home/roxxy/cef_binary_3.2743.1442.ge29124d_linux64/libcev_dll_wrapper
+WORKDIR /home/roxxy/cef_binary_3.2743.1442.ge29124d_linux64/libcef_dll_wrapper/
 RUN make 
 
 
