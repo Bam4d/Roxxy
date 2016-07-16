@@ -5,6 +5,8 @@
  *      Author: bam4d
  */
 
+#ifndef ROXXY_BUILD
+
 #include <gtest/gtest.h>
 #include <vector>
 #include <unistd.h>
@@ -36,4 +38,6 @@ TEST(ResourceFilterTest, TestFilter) {
 	EXPECT_EQ(filter.ShouldFilterUrl("http://google.com", "google.com"), false);
 
 }
+
+#endif  /* ROXXY_BUILD */
 

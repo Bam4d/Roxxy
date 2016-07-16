@@ -136,12 +136,20 @@ void CefBrowserHandlerImpl::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr
  * End the session with the browser.
  */
 void CefBrowserHandlerImpl::ResetBrowser(CefRefPtr<CefBrowser> browser) {
+
+	if (!CefCurrentlyOn(TID_UI)) {
+			// Execute on the UI thread.
+			CefPostTask(TID_UI,
+					base::Bind(&CefBrowserHandlerImpl::ResetBrowser, this, browser));
+			return;
+	}
 	// Set the browser url once it is loaded to the "about-blank" state
+	setBrowserUrl(browser, "about:blank");
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
 	browserSession->pageUrl = "about:blank";
 	browserSession->pageDomain = "";
 	browserSession->isLoaded = false;
-	setBrowserUrl(browser, "about:blank");
+
 }
 
 void CefBrowserHandlerImpl::OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward) {
@@ -173,7 +181,7 @@ void CefBrowserHandlerImpl::OnPageLoadExecuted(const CefString& htmlContent, int
 	browserPool_->GetAssignedRenderProxyHandler(browserId)->PageRenderCompleted(browserSession);
 }
 
-void CefBrowserHandlerImpl::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame) {
+void CefBrowserHandlerImpl::OnLoadStart(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type) {
 }
 
 void CefBrowserHandlerImpl::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) {
@@ -201,13 +209,12 @@ void CefBrowserHandlerImpl::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementT
  * Handle any javascript dialogs that come from the page
  */
 bool CefBrowserHandlerImpl::OnJSDialog(CefRefPtr<CefBrowser> browser,
-		                          const CefString& origin_url,
-		                          const CefString& accept_lang,
-		                          JSDialogType dialog_type,
-		                          const CefString& message_text,
-		                          const CefString& default_prompt_text,
-		                          CefRefPtr<CefJSDialogCallback> callback,
-		                          bool& suppress_message) {
+		const CefString& origin_url,
+		JSDialogType dialog_type,
+		const CefString& message_text,
+		const CefString& default_prompt_text,
+		CefRefPtr<CefJSDialogCallback> callback,
+		bool& suppress_message) {
 	suppress_message = true;
 	LOG(INFO)<<"JS DIALOG"<<message_text.ToString();
 	return false;
@@ -222,6 +229,10 @@ cef_return_value_t CefBrowserHandlerImpl::OnBeforeResourceLoad(
 	  CefRefPtr<CefRequest> request,
 	  CefRefPtr<CefRequestCallback> callback) {
 	BrowserSession* browserSession = browserPool_->GetBrowserSessionById(browser->GetIdentifier());
+
+	if(browserSession->isLoaded) {
+		return RV_CANCEL;
+	}
 
 	bool isAboutBlank = browserSession->pageUrl.compare("about:blank") == 0;
 

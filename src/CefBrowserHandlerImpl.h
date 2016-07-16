@@ -96,7 +96,7 @@ private:
 			const CefString& errorText, const CefString& failedUrl) override;
 
 	virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
-			CefRefPtr<CefFrame> frame) override;
+			CefRefPtr<CefFrame> frame, TransitionType transition_type) override;
 
 	virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
 			CefRefPtr<CefFrame> frame, int httpStatusCode) override;
@@ -105,13 +105,12 @@ private:
 	 * CefJSDialogHandler methods
 	 */
 	virtual bool OnJSDialog(CefRefPtr<CefBrowser> browser,
-		                          const CefString& origin_url,
-		                          const CefString& accept_lang,
-		                          JSDialogType dialog_type,
-		                          const CefString& message_text,
-		                          const CefString& default_prompt_text,
-		                          CefRefPtr<CefJSDialogCallback> callback,
-		                          bool& suppress_message) override;
+			const CefString& origin_url,
+			JSDialogType dialog_type,
+			const CefString& message_text,
+			const CefString& default_prompt_text,
+			CefRefPtr<CefJSDialogCallback> callback,
+			bool& suppress_message) override;
 
 
 	/**

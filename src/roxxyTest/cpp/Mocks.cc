@@ -4,6 +4,9 @@
  *  Created on: 23 Mar 2016
  *      Author: bam4d
  */
+
+#ifndef ROXXY_BUILD
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -128,16 +131,16 @@ class MockCefBrowserHandler : public CefBrowserHandler {
       void(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack, bool canGoForward));
   MOCK_METHOD5(OnLoadError,
       void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl));
-  MOCK_METHOD2(OnLoadStart,
-      void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame));
+  MOCK_METHOD3(OnLoadStart,
+      void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType type));
   MOCK_METHOD3(OnLoadEnd,
       void(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode));
   MOCK_METHOD6(OnPaint,
       void(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height));
   MOCK_METHOD3(OnProcessMessageReceived,
       bool(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message));
-  MOCK_METHOD8(OnJSDialog,
-		  bool(CefRefPtr<CefBrowser> browser, const CefString& origin_url, const CefString& accept_lang, JSDialogType dialog_type, const CefString& message_text, const CefString& default_prompt_text, CefRefPtr<CefJSDialogCallback> callback, bool& suppress_message));
+  MOCK_METHOD7(OnJSDialog,
+		  bool(CefRefPtr<CefBrowser> browser, const CefString& origin_url, JSDialogType dialog_type, const CefString& message_text, const CefString& default_prompt_text, CefRefPtr<CefJSDialogCallback> callback, bool& suppress_message));
   MOCK_METHOD4(OnBeforeResourceLoad,
 		  ReturnValue(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request, CefRefPtr<CefRequestCallback> callback));
   MOCK_METHOD4(OnResourceRedirect,
@@ -148,5 +151,7 @@ class MockCefBrowserHandler : public CefBrowserHandler {
   // Stop the compiler complaining because this implements some pure virtual functions that won't be used in the tests
   IMPLEMENT_REFCOUNTING(MockCefBrowserHandler)
 };
+
+#endif  /* ROXXY_BUILD */
 
 

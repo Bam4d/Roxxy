@@ -1,55 +1,87 @@
 #!/bin/bash
 
-echo "Installing cef lib binaries"
-# Firstly pick up the compiled libs from s3!
-wget https://s3.amazonaws.com/bam4d-experiments/roxxy/ceflib.tar.gz ceflib.tar.gz
-tar -xvf ceflib.tar.gz
+CEFTAR="cef_binary_3.2743.1442.ge29124d_linux64.tar.bz2"
 
-
-echo "Installing pxygen dependencies"
-# Install lib dependencies for proxygen
 sudo apt-get update
-sudo apt-get install -yq git
-sudo apt-get install -yq curl
-sudo apt-get install -yq cmake build-essential
-sudo apt-get install -yq \
-    flex \
-    bison \
-    libkrb5-dev \
-    libsasl2-dev \
-    libnuma-dev \
-    pkg-config \
-    libssl-dev \
-    libcap-dev \
-    gperf \
-    autoconf-archive \
-    libevent-dev \
-    libgoogle-glog-dev \
-    wget
+sudo apt-get install -yq 
+	git \
+	cmake \
+	build-essential \
+	python-pip
 
 echo "Installing gtest"
-# Clone the gtest repo from github.
+# Clone and install google test
 git clone https://github.com/google/googletest.git
-git checkout tags/release-1.7.0
 cd googletest
+git fetch --all
+git checkout 0a439623f75c029912728d80cb7f1b8b48739ca4
 cmake .
-sudo make install
+make
+sudo cp -a googletest/include/gtest /usr/include && \
+	sudo cp -a googlemock/gtest/libgtest_main.a googlemock/gtest/libgtest.a /usr/lib/
+sudo cp -a googlemock/include/gmock /usr/include && \
+	sudo cp -a googlemock/libgmock_main.a googlemock/libgmock.a /usr/lib/
 
 cd ../
 
 echo "Installing proxygen"
 # Clone the proxygen repo from github.
 git clone https://github.com/facebook/proxygen.git
-git checkout tags/v0.32.0
 cd proxygen/proxygen
+git fetch --all
+git checkout 00612209fa827f1a6ad0dea498435a9cfd449624
 
 echo "Installing proxygen.."
 # build proxygen stuff
 ./deps.sh && ./reinstall.sh
 
-cd ../../
-echo "Installing gradle..."
-./gradlew
+echo "Installing gyp"
+git clone https://chromium.googlesource.com/external/gyp.git
+cd gyp
+sudo pip install setuptools
+sudo python setup.py install
 
-echo "Building Roxxy.."
-gradlew build
+echo "Installing cef lib binaries"
+# Firstly pick up the compiled libs from s3!
+if [ ! -f $CEFTAR ]; then
+    echo "Downloading cef build $CEFTAR"
+    wget "http://opensource.spotify.com/cefbuilds/$CEFTAR" $CEFTAR
+fi
+
+tar -xvf $CEFTAR
+
+cd $CEFTAR
+cmake .
+cd libcev_dll_wrapper
+make 
+cd ../../
+
+echo "Installing CEF dependencies"
+sudo apt-get install -yq \
+    python-pip \
+    ninja-build \
+    libpng-dev \
+    libfontconfig \
+    libfreetype6 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libnss3 \
+    libnspr4 \
+    libgconf-2-4 \
+    libxi6 \
+    libxcursor1 \
+    libxfixes3 \
+    libxss1 \
+    libxcomposite1 \
+    libasound2 \
+    libxdamage1 \
+    libxtst6 \
+    libatk1.0-0 \
+    libxrandr2 \
+    libcups2
+    
+sudo apt-get -yq autoremove 
+
+
+echo "Dependencies installed!!"
